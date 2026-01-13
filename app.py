@@ -952,11 +952,14 @@ def login():
 
         session.close()
 
-        # 设置会话（简单实现，使用 session_id）
-        session_id = secrets.token_hex(16)
+        # 设置会话（使用 Flask session）
+        from flask import session as flask_session
+        flask_session['family_id'] = family.family_id
+        flask_session['parent_name'] = family.parent_name
+        flask_session.permanent = True  # 持久化 session
 
-        # 实际项目应该使用 Flask-Login 或 JWT
-        # 这里简化为直接返回 family_id
+        logger.info(f"用户登录成功: email={email}, family_id={family.family_id}")
+
         return jsonify({
             'success': True,
             'family_id': family.family_id,
@@ -997,6 +1000,41 @@ def get_current_user():
     except Exception as e:
         logger.error(f"获取用户信息失败: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
+
+
+# ========== 认证检查 API ==========
+
+@app.route('/api/auth/check', methods=['GET'])
+def check_auth():
+    """检查用户登录状态"""
+    try:
+        # 从 session 中获取 family_id
+        from flask import session as flask_session
+        family_id = flask_session.get('family_id')
+
+        if not family_id:
+            return jsonify({'loggedIn': False})
+
+        # 验证 family_id 是否有效
+        session = db.get_session()
+        family = session.query(Family).filter_by(family_id=family_id).first()
+        session.close()
+
+        if not family:
+            return jsonify({'loggedIn': False})
+
+        return jsonify({
+            'loggedIn': True,
+            'user': {
+                'family_id': family.family_id,
+                'email': family.email,
+                'parent_name': family.parent_name
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"检查登录状态失败: {e}", exc_info=True)
+        return jsonify({'loggedIn': False})
 
 
 # ========== 学生管理 API ==========
