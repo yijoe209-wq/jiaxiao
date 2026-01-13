@@ -157,6 +157,44 @@
         .image-preview-item {
             animation: fadeIn 0.3s ease-out;
         }
+
+        /* 登录遮罩层 */
+        #loginOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: none;
+        }
+
+        #loginOverlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 新增学生模态框 */
+        #studentModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: none;
+        }
+
+        #studentModal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body class="pb-24">
@@ -166,7 +204,7 @@
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center space-x-3">
                     <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-md">
-                        <span class="text-2xl">📚</span>
+                        <i class="fas fa-graduation-cap text-primary-500 text-2xl"></i>
                     </div>
                     <div>
                         <h1 class="text-xl font-bold text-white">家校任务助手</h1>
@@ -178,10 +216,10 @@
             <!-- 导航链接 -->
             <nav class="flex flex-wrap gap-2">
                 <a href="/my-tasks" class="flex-1 min-w-[100px] bg-white/20 backdrop-blur-sm text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-white/30 transition-all text-center">
-                    <i class="fas fa-tasks mr-1.5"></i>任务中心
+                    <i class="fas fa-home mr-1.5"></i>任务中心
                 </a>
                 <a href="/students" class="flex-1 min-w-[100px] bg-white/20 backdrop-blur-sm text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-white/30 transition-all text-center">
-                    <i class="fas fa-user-graduate mr-1.5"></i>学生管理
+                    <i class="fas fa-users mr-1.5"></i>学生管理
                 </a>
             </nav>
         </header>
@@ -273,6 +311,12 @@
         </div>
     </div>
 
+    <!-- 登录遮罩层 -->
+    <div id="loginOverlay"></div>
+
+    <!-- 新增学生模态框 -->
+    <div id="studentModal"></div>
+
     <!-- 底部收藏提示 -->
     <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t-2 border-primary-200 px-4 py-3 shadow-lg animate-slide-up">
         <div class="max-w-2xl mx-auto">
@@ -289,26 +333,207 @@
     <script>
         const API_BASE = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
         let uploadedImages = [];
+        let currentUser = null;
 
-        // 页面加载时获取学生列表
+        // 页面加载时检查登录状态
         window.addEventListener('DOMContentLoaded', async function() {
+            // 检查登录状态
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/check`);
+                const result = await response.json();
+
+                if (!result.loggedIn) {
+                    // 未登录，显示登录提示
+                    showLoginRequired();
+                    return;
+                }
+
+                currentUser = result.user;
+            } catch (error) {
+                console.error('检查登录状态失败:', error);
+            }
+
+            // 加载学生列表
+            loadStudents();
+        });
+
+        // 显示需要登录提示
+        function showLoginRequired() {
+            const overlay = document.getElementById('loginOverlay');
+            overlay.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 animate-slide-up">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-lock text-primary-500 text-3xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">需要登录</h2>
+                        <p class="text-gray-600">请先登录后再使用任务管理功能</p>
+                    </div>
+                    <a href="/login" class="btn-press block w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-4 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition-all text-center">
+                        <i class="fas fa-sign-in-alt mr-2"></i>立即登录
+                    </a>
+                    <p class="text-center text-gray-500 text-sm mt-4">
+                        还没有账号？<a href="/login" class="text-primary-600 font-medium hover:underline">立即注册</a>
+                    </p>
+                </div>
+            `;
+            overlay.classList.add('show');
+        }
+
+        // 加载学生列表
+        async function loadStudents() {
             try {
                 const response = await fetch(`${API_BASE}/api/students`);
                 const result = await response.json();
 
                 if (result.success && result.students) {
                     const select = document.getElementById('studentSelect');
+
+                    // 清空选项
+                    select.innerHTML = '<option value="">👇 请选择学生...</option>';
+
+                    // 添加现有学生
                     result.students.forEach(student => {
                         const option = document.createElement('option');
                         option.value = student.student_id;
                         option.textContent = `${student.name} ${student.grade ? '· ' + student.grade : ''}`;
                         select.appendChild(option);
                     });
+
+                    // 添加"新增学生"选项
+                    const addOption = document.createElement('option');
+                    addOption.value = '__add_new__';
+                    addOption.textContent = '+ 新增学生';
+                    addOption.style.color = '#f5a11d';
+                    addOption.style.fontWeight = 'bold';
+                    select.appendChild(addOption);
+
+                    // 监听选择变化
+                    select.addEventListener('change', function() {
+                        if (this.value === '__add_new__') {
+                            showAddStudentModal();
+                            this.value = ''; // 重置选择
+                        }
+                    });
                 }
             } catch (error) {
                 console.error('加载学生列表失败:', error);
             }
-        });
+        }
+
+        // 显示新增学生模态框
+        function showAddStudentModal() {
+            const modal = document.getElementById('studentModal');
+            modal.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 animate-slide-up">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">
+                            <i class="fas fa-user-plus text-primary-500 mr-2"></i>新增学生
+                        </h2>
+                        <button onclick="closeStudentModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <form onsubmit="addStudent(event)">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-semibold mb-2">学生姓名</label>
+                            <input type="text" id="newStudentName" required
+                                   class="input-focus w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none"
+                                   placeholder="请输入学生姓名">
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-gray-700 font-semibold mb-2">年级</label>
+                            <select id="newStudentGrade"
+                                    class="input-focus w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none">
+                                <option value="一年级">一年级</option>
+                                <option value="二年级">二年级</option>
+                                <option value="三年级">三年级</option>
+                                <option value="四年级">四年级</option>
+                                <option value="五年级">五年级</option>
+                                <option value="六年级">六年级</option>
+                                <option value="七年级">七年级</option>
+                                <option value="八年级">八年级</option>
+                                <option value="九年级">九年级</option>
+                            </select>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button type="button" onclick="closeStudentModal()"
+                                    class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+                                取消
+                            </button>
+                            <button type="submit"
+                                    class="flex-1 px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl font-semibold hover:from-primary-600 hover:to-primary-700 transition-all shadow-md">
+                                <i class="fas fa-plus mr-2"></i>添加
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            modal.classList.add('show');
+        }
+
+        // 关闭新增学生模态框
+        function closeStudentModal() {
+            const modal = document.getElementById('studentModal');
+            modal.classList.remove('show');
+        }
+
+        // 添加学生
+        async function addStudent(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('newStudentName').value.trim();
+            const grade = document.getElementById('newStudentGrade').value;
+
+            if (!name) {
+                alert('请输入学生姓名');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/students`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, grade })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 关闭模态框
+                    closeStudentModal();
+
+                    // 重新加载学生列表
+                    await loadStudents();
+
+                    // 自动选择新添加的学生
+                    const select = document.getElementById('studentSelect');
+                    select.value = result.student_id;
+
+                    // 显示成功提示
+                    showToast('学生添加成功！');
+                } else {
+                    alert('添加失败：' + result.error);
+                }
+            } catch (error) {
+                alert('添加失败：' + error.message);
+            }
+        }
+
+        // 显示提示消息
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-accent-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 animate-slide-up';
+            toast.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
 
         // 处理图片选择
         function handleImageSelect(event) {
