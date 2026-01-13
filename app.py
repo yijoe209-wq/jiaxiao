@@ -28,11 +28,12 @@ MetricMiddleware(app)
 # 初始化数据库
 init_db(Config.DATABASE_URL)
 
-# 创建上传目录
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+# 创建上传目录（使用持久化存储）
+# Zeabur: /app/data 映射到持久化存储
+# 本地开发: 使用 ./data/uploads
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/app/data/uploads')
 if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
 def allowed_file(filename):

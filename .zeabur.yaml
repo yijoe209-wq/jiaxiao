@@ -20,22 +20,25 @@ services:
       - PYTHON_ENV=production
       - PORT=5001
 
+      # 上传文件存储（持久化）
+      - UPLOAD_FOLDER=/app/data/uploads
+
       # 数据库配置（使用 Zeabur PostgreSQL）
-      - DATABASE_URL=${{Postgres-JIAXIAO.DATABASE_URL}
+      - DATABASE_URL=${{Postgres-JIAXIAO.DATABASE_URL}}
 
       # LLM API（需要在 Zeabur 控制台配置）
       - LLM_API_KEY=${{LLM_API_KEY}}
       - LLM_BASE_URL=https://api.deepseek.com
 
       # 微信配置（可选，如果使用微信公众号）
-      - WECHAT_TOKEN=${{WECHAT_TOKEN}
-      - WECHAT_APPID=${{WECHAT_APPID}
-      - WECHAT_SECRET=${{WECHAT_SECRET}
+      - WECHAT_TOKEN=${{WECHAT_TOKEN}}
+      - WECHAT_APPID=${{WECHAT_APPID}}
+      - WECHAT_SECRET=${{WECHAT_SECRET}}
 
       # 服务配置
       - ENV=production
       - DEBUG=False
-      - SERVER_URL=${{ZEABUR_URL}
+      - SERVER_URL=${{ZEABUR_URL}}
 
     # 依赖服务
     depends_on:
