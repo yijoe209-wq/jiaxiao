@@ -920,10 +920,17 @@ def register():
         family_id = family.family_id
         session.close()
 
+        # 设置会话（自动登录）
+        from flask import session as flask_session
+        flask_session['family_id'] = family_id
+        flask_session['parent_name'] = parent_name
+        flask_session.permanent = True
+
         logger.info(f"新家庭注册: email={email}, name={parent_name}")
         return jsonify({
             'success': True,
             'family_id': family_id,
+            'parent_name': parent_name,
             'message': '注册成功'
         })
 
