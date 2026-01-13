@@ -881,6 +881,17 @@ def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 
+def get_current_family_id():
+    """获取当前登录用户的 family_id（从 Flask session）"""
+    from flask import session as flask_session
+    family_id = flask_session.get('family_id')
+
+    if not family_id:
+        return None
+
+    return family_id
+
+
 @app.route('/api/register', methods=['POST'])
 def register():
     """家长注册"""
@@ -983,7 +994,7 @@ def login():
 def get_current_user():
     """获取当前登录用户信息"""
     try:
-        family_id = request.headers.get('X-Family-ID')
+        family_id = get_current_family_id()
 
         if not family_id:
             return jsonify({'error': '未登录'}), 401
@@ -1050,7 +1061,7 @@ def check_auth():
 def get_students():
     """获取当前家庭的学生列表"""
     try:
-        family_id = request.headers.get('X-Family-ID')
+        family_id = get_current_family_id()
 
         session = db.get_session()
 
@@ -1081,7 +1092,7 @@ def get_students():
 def add_student():
     """添加学生（需要登录）"""
     try:
-        family_id = request.headers.get('X-Family-ID')
+        family_id = get_current_family_id()
 
         if not family_id:
             return jsonify({'error': '未登录'}), 401
@@ -1119,7 +1130,7 @@ def add_student():
 def update_student(student_id):
     """更新学生信息"""
     try:
-        family_id = request.headers.get('X-Family-ID')
+        family_id = get_current_family_id()
 
         if not family_id:
             return jsonify({'error': '未登录'}), 401
@@ -1164,7 +1175,7 @@ def update_student(student_id):
 def delete_student(student_id):
     """删除学生"""
     try:
-        family_id = request.headers.get('X-Family-ID')
+        family_id = get_current_family_id()
 
         if not family_id:
             return jsonify({'error': '未登录'}), 401
@@ -1201,7 +1212,7 @@ def confirm_task():
         pending_id = data.get('pending_id')
         student_id = data.get('student_id')
         updated_tasks = data.get('updated_tasks')  # 用户编辑后的任务数据
-        family_id = request.headers.get('X-Family-ID')
+        family_id = get_current_family_id()
 
         if not pending_id or not student_id:
             return jsonify({'error': '缺少必要参数'}), 400
