@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务管理 - 家校助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .section h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .task-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+
+        .task-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .task-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .task-type.阅读 { background: #e3f2fd; color: #1976d2; }
+        .task-type.背诵 { background: #fff3e0; color: #f57c00; }
+        .task-type.书写 { background: #f3e5f5; color: #7b1fa2; }
+        .task-type.练习 { background: #e8f5e9; color: #388e3c; }
+        .task-type.听写 { background: #fce4ec; color: #c2185b; }
+        .task-type.其他 { background: #eceff1; color: #455a64; }
+
+        .task-sequence {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .task-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .task-details {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 20px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .confirm-form {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .task-list {
+            margin-top: 20px;
+        }
+
+        .task-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+        }
+
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .checkbox.checked {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 16px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>✅ 任务确认</h1>
+                    <p>快速确认和分配孩子的学习任务</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <a href="/my-tasks" style="padding: 10px 20px; background: rgba(255,255,255,0.2); border-radius: 6px; text-decoration: none; color: white;">📋 任务中心</a>
+                    <a href="/" style="padding: 10px 20px; background: rgba(255,255,255,0.2); border-radius: 6px; text-decoration: none; color: white;">🏠 录入任务</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="success-message" id="successMessage">
+            ✓ 操作成功！
+        </div>
+
+        <!-- 待确认任务 -->
+        <div class="section">
+            <h2>
+                📋 待确认任务
+                <span class="badge" id="pendingCount">0</span>
+            </h2>
+            <div id="pendingTasks">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 已确认任务 -->
+        <div class="section">
+            <h2>
+                ✅ 已确认任务
+                <span class="badge" id="confirmedCount">0</span>
+            </h2>
+
+            <div class="tabs">
+                <button class="tab active" onclick="filterTasks('all')">全部</button>
+                <button class="tab" onclick="filterTasks('pending')">待完成</button>
+                <button class="tab" onclick="filterTasks('completed')">已完成</button>
+            </div>
+
+            <div id="confirmedTasks">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 自动检测 API 地址（支持 localhost 和局域网访问）
+        const API_BASE = window.location.protocol + '//' + window.location.hostname +
+                        (window.location.port ? ':' + window.location.port : '');
+        let currentFilter = 'all';
+        let confirmedTasksData = [];
+
+        // 学生数据
+        const students = [
+            { id: '845d9d68-4c15-4a97-869e-bd0af18dbc67', name: '渲宇', grade: '七年级' },
+            { id: '0f3f8050-ce01-4397-809a-e4101dfb78e0', name: '梓萌', grade: '二年级' }
+        ];
+
+        // 页面加载
+        window.onload = function() {
+            loadPendingTasks();
+            // 延迟加载已确认任务，避免阻塞
+            setTimeout(loadConfirmedTasks, 100);
+        };
+
+        // 加载待确认任务
+        async function loadPendingTasks() {
+            try {
+                // 从 pending_tasks 表获取
+                const response = await fetch(`${API_BASE}/api/pending`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                const container = document.getElementById('pendingTasks');
+                document.getElementById('pendingCount').textContent = data.tasks.length;
+
+                if (data.tasks.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <p>🎉 暂无待确认任务</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = data.tasks.map(pending => {
+                    const taskData = pending.task_data;
+                    const isMultiple = taskData.type === 'multiple';
+
+                    // 兼容多种数据结构
+                    let taskTitle = '';
+                    let taskDetails = '';
+                    let tasksList = [];
+
+                    if (isMultiple && taskData.tasks) {
+                        // 复合任务
+                        tasksList = taskData.tasks;
+                    } else if (taskData.task) {
+                        // 单条任务（旧格式：{task: {...}}）
+                        taskTitle = taskData.task.description || '任务';
+                        taskDetails = taskData.task.raw_text || '';
+                    } else {
+                        // 单条任务（新格式：{description: ...}）
+                        taskTitle = taskData.description || '任务';
+                        taskDetails = taskData.raw_text || taskData.details || '';
+                    }
+
+                    return `
+                        <div class="task-card">
+                            <div class="task-header">
+                                <div>
+                                    <strong>识别到 ${taskData.total_tasks || 1} 条任务</strong>
+                                    <span style="margin-left: 10px; color: #999; font-size: 13px;">
+                                        ${new Date(pending.created_at).toLocaleString()}
+                                    </span>
+                                </div>
+                            </div>
+
+                            ${isMultiple ? `
+                                <div style="margin: 15px 0;">
+                                    ${tasksList.map((task, idx) => `
+                                        <div style="padding: 10px; background: white; border-radius: 6px; margin-bottom: 8px;">
+                                            <div style="display: flex; gap: 10px; align-items: center;">
+                                                <span style="font-weight: bold; color: #667eea;">${task.sequence || (idx + 1)}.</span>
+                                                ${task.task_type ? `<span class="task-type ${task.task_type}">${task.task_type}</span>` : ''}
+                                                <span style="flex: 1;">${task.description || '任务'}</span>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : `
+                                <div class="task-title">${taskTitle}</div>
+                                ${taskDetails ? `<div class="task-details">${taskDetails}</div>` : ''}
+                            `}
+
+                            <div class="confirm-form">
+                                <div class="form-group">
+                                    <label>选择学生：</label>
+                                    <select id="student-${pending.pending_id}">
+                                        ${students.map(s => `
+                                            <option value="${s.id}">${s.name} (${s.grade})</option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="confirmTask('${pending.pending_id}')">
+                                    ✓ 确认并创建任务
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('加载待确认任务失败:', error);
+                document.getElementById('pendingTasks').innerHTML = `
+                    <div class="empty-state">
+                        <p style="color: #dc3545;">❌ 加载失败: ${error.message}</p>
+                        <button onclick="loadPendingTasks()" style="margin-top: 10px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">重试</button>
+                    </div>
+                `;
+            }
+        }
+
+        // 确认任务
+        async function confirmTask(pendingId) {
+            const studentSelect = document.getElementById(`student-${pendingId}`);
+            if (!studentSelect) {
+                alert('找不到学生选择框，请刷新页面重试');
+                return;
+            }
+
+            const studentId = studentSelect.value;
+            const btn = event.target;
+            const originalText = btn.textContent;
+
+            btn.disabled = true;
+            btn.textContent = '⏳ 处理中...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/confirm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pending_id: pendingId,
+                        student_id: studentId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess(`成功创建 ${result.task_count || result.created_count || 1} 条任务！`);
+                    loadPendingTasks();
+                    loadConfirmedTasks();
+                } else {
+                    alert('确认失败：' + (result.error || '未知错误'));
+                }
+            } catch (error) {
+                console.error('确认任务错误:', error);
+                alert('操作失败：' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        // 加载已确认任务
+        async function loadConfirmedTasks() {
+            try {
+                // 获取所有学生的任务
+                const allTasks = [];
+
+                for (const student of students) {
+                    const response = await fetch(`${API_BASE}/api/tasks/${student.id}`);
+                    const data = await response.json();
+
+                    data.tasks.forEach(task => {
+                        task.student_name = student.name;
+                        task.student_grade = student.grade;
+                    });
+
+                    allTasks.push(...data.tasks);
+                }
+
+                confirmedTasksData = allTasks;
+                renderConfirmedTasks();
+                document.getElementById('confirmedCount').textContent = allTasks.length;
+
+            } catch (error) {
+                console.error('加载失败:', error);
+            }
+        }
+
+        // 渲染已确认任务
+        function renderConfirmedTasks() {
+            const container = document.getElementById('confirmedTasks');
+
+            let filteredTasks = confirmedTasksData;
+            if (currentFilter === 'pending') {
+                filteredTasks = confirmedTasksData.filter(t => !t.is_completed);
+            } else if (currentFilter === 'completed') {
+                filteredTasks = confirmedTasksData.filter(t => t.is_completed);
+            }
+
+            if (filteredTasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>📭 暂无任务</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="task-list">
+                    ${filteredTasks.map(task => {
+                        const hasImages = task.attachments && task.attachments.length > 0;
+                        const imageCount = hasImages ? task.attachments.length : 0;
+
+                        return `
+                        <div class="task-item ${task.is_completed ? 'completed' : ''}" onclick="showTaskDetail('${task.task_id}')">
+                            <div class="checkbox ${task.is_completed ? 'checked' : ''}"
+                                 onclick="event.stopPropagation(); toggleComplete('${task.task_id}')"></div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span class="task-title">${task.description}</span>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        ${task.task_type ? `<span class="task-type ${task.task_type}">${task.task_type}</span>` : ''}
+                                        ${hasImages ? `<span style="font-size: 16px;" title="包含 ${imageCount} 张图片">📷 ${imageCount}</span>` : ''}
+                                    </div>
+                                </div>
+                                <div style="font-size: 13px; color: #999;">
+                                    📚 ${task.subject || '未分类'} • 👤 ${task.student_name}
+                                    ${task.sequence ? ` • 序号: ${task.sequence}` : ''}
+                                    ${hasImages ? ` • 📷 ${imageCount} 张图片` : ''}
+                                </div>
+                                ${task.details ? `
+                                    <div style="margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; font-size: 13px; color: #666;">
+                                        ${task.details.substring(0, 100)}...
+                                    </div>
+                                ` : ''}
+                                ${hasImages ? `
+                                    <div style="margin-top: 8px; display: flex; gap: 8px;">
+                                        ${task.attachments.map((att, idx) => `
+                                            <img src="${att.path}"
+                                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer;"
+                                                 onclick="event.stopPropagation(); showImage('${att.path}')"
+                                                 alt="附件图片 ${idx + 1}">
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        // 切换完成状态
+        async function toggleComplete(taskId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/tasks/${taskId}/complete`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    loadConfirmedTasks();
+                } else {
+                    alert('操作失败：' + result.error);
+                }
+            } catch (error) {
+                alert('操作失败：' + error.message);
+            }
+        }
+
+        // 筛选任务
+        function filterTasks(filter) {
+            currentFilter = filter;
+
+            // 更新 tab 样式
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            renderConfirmedTasks();
+        }
+
+        // 显示成功消息
+        function showSuccess(message) {
+            const el = document.getElementById('successMessage');
+            el.textContent = '✓ ' + message;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        // 显示大图
+        function showImage(imagePath) {
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.9); z-index: 9999;
+                display: flex; align-items: center; justify-content: center;
+                cursor: pointer;
+            `;
+            modal.onclick = () => document.body.removeChild(modal);
+
+            const img = document.createElement('img');
+            img.src = imagePath;
+            img.style.cssText = `
+                max-width: 90%; max-height: 90%;
+                object-fit: contain;
+                border-radius: 8px;
+            `;
+
+            modal.appendChild(img);
+            document.body.appendChild(modal);
+        }
+
+        // 显示任务详情
+        function showTaskDetail(taskId) {
+            const task = confirmedTasksData.find(t => t.task_id === taskId);
+            if (!task) return;
+
+            const hasImages = task.attachments && task.attachments.length > 0;
+
+            let imagesHtml = '';
+            if (hasImages) {
+                imagesHtml = `
+                    <div style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 10px;">📷 图片附件 (${task.attachments.length})</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+                            ${task.attachments.map((att, idx) => `
+                                <img src="${att.path}"
+                                     style="width: 100%; height: 150px; object-fit: cover; border-radius: 6px; cursor: pointer;"
+                                     onclick="showImage('${att.path}')"
+                                     alt="附件图片 ${idx + 1}">
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.5); z-index: 9999;
+                display: flex; align-items: center; justify-content: center;
+                padding: 20px;
+            `;
+            modal.onclick = (e) => {
+                if (e.target === modal) document.body.removeChild(modal);
+            };
+
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white; border-radius: 10px; padding: 30px;
+                max-width: 600px; max-height: 80vh; overflow-y: auto;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            `;
+            content.innerHTML = `
+                <h2 style="margin-bottom: 20px;">任务详情</h2>
+                <div style="line-height: 1.8;">
+                    <p><strong>描述：</strong>${task.description}</p>
+                    <p><strong>科目：</strong>${task.subject || '未分类'}</p>
+                    <p><strong>类型：</strong>${task.task_type || '其他'}</p>
+                    ${task.sequence ? `<p><strong>序号：</strong>${task.sequence}</p>` : ''}
+                    ${task.details ? `<p><strong>详情：</strong><br>${task.details}</p>` : ''}
+                    ${hasImages ? `<p><strong>附件：</strong>${task.attachments.length} 张图片</p>` : ''}
+                </div>
+                ${imagesHtml}
+                <button onclick="document.body.removeChild(this.closest('.modal-wrapper'))"
+                        style="margin-top: 20px; padding: 10px 30px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    关闭
+                </button>
+            `;
+            content.className = 'modal-wrapper';
+            content.onclick = (e) => e.stopPropagation();
+
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+        }
+
+        // 定时刷新
+        setInterval(() => {
+            loadPendingTasks();
+            loadConfirmedTasks();
+        }, 30000); // 每30秒刷新
+    </script>
+</body>
+</html>

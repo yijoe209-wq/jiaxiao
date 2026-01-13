@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>作业助手</title>
+    <!-- 微信内浏览器优化 -->
+    <meta name="x5-orientation" content="portrait">
+    <meta name="x5-fullscreen" content="true">
+    <meta name="x5-page-mode" content="app">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 10px;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 紧凑的头部 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 6px;
+        }
+
+        .nav-links a {
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            text-decoration: none;
+            color: white;
+            font-size: 13px;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            display: none;
+            padding: 15px;
+            background: #d4edda;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #155724;
+        }
+
+        .image-upload-area {
+            margin-top: 12px;
+        }
+
+        .image-upload-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .image-upload-header strong {
+            font-size: 14px;
+            color: #333;
+        }
+
+        #imageCount {
+            font-size: 12px;
+            color: #999;
+        }
+
+        #imagePreviewContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .image-preview-item {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+            overflow: hidden;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+
+        .image-preview-item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview-item .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .upload-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #666;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .upload-btn:hover {
+            background: #e9ecef;
+        }
+
+        /* 底部收藏提示 */
+        .footer-tip {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-top: 2px solid #667eea;
+            padding: 10px 15px;
+            font-size: 12px;
+            color: #667eea;
+            z-index: 1000;
+        }
+
+        .footer-tip strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 20px;
+            }
+
+            .header {
+                padding: 20px 30px;
+                border-radius: 10px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .card {
+                padding: 25px;
+                border-radius: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 紧凑的头部 -->
+        <div class="header">
+            <h1>📚 作业助手</h1>
+            <div class="nav-links">
+                <a href="/my-tasks">📋 任务中心</a>
+                <a href="/tasks">✅ 待确认</a>
+                <a href="/students">👤 学生管理</a>
+            </div>
+        </div>
+
+        <!-- 输入卡片 -->
+        <div class="card">
+            <h2>📋 1. 选择学生</h2>
+            <div class="form-group">
+                <select id="studentSelect" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;">
+                    <option value="">请选择学生...</option>
+                </select>
+            </div>
+
+            <h2>📝 2. 粘贴老师消息</h2>
+            <textarea id="messageInput" placeholder="在这里粘贴老师的作业消息...&#10;&#10;例如：&#10;今晚作业：&#10;1. 数学：完成课本第20页练习题，明天提交&#10;2. 语文：背诵古诗三首"></textarea>
+
+            <!-- 图片上传区域 -->
+            <div class="image-upload-area">
+                <div class="image-upload-header">
+                    <strong>📎 添加图片附件（可选，仅作附件不解析）</strong>
+                    <span id="imageCount">已选择 0 张</span>
+                </div>
+
+                <div id="imagePreviewContainer"></div>
+
+                <label class="upload-btn">
+                    📷 点击选择图片
+                    <input type="file" id="imageInput" accept="image/*" multiple style="display: none;" onchange="handleImageSelect(event)">
+                </label>
+                <span style="margin-left: 8px; font-size: 12px; color: #999;">支持 JPG、PNG，最多 9 张</span>
+            </div>
+
+            <button class="btn" onclick="simulateForward()" style="margin-top: 15px;">🚀 AI 智能解析并创建任务</button>
+
+            <div class="result" id="result">
+                <h3>✅ 解析成功！</h3>
+                <div id="resultContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部收藏提示 -->
+    <div class="footer-tip">
+        <strong>💡 收藏到微信，下次快速访问</strong>
+        点击右上角 "···" → 收藏 → 下次在"我 → 收藏"中打开
+    </div>
+
+    <script>
+        const API_BASE = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
+        let uploadedImages = [];
+
+        // 页面加载时获取学生列表
+        window.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch(`${API_BASE}/api/students`);
+                const result = await response.json();
+
+                if (result.success && result.students) {
+                    const select = document.getElementById('studentSelect');
+                    result.students.forEach(student => {
+                        const option = document.createElement('option');
+                        option.value = student.student_id;
+                        option.textContent = student.name;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('加载学生列表失败:', error);
+            }
+        });
+
+        // 处理图片选择 - 直接转为 base64，不经过服务器上传
+        function handleImageSelect(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            const previewContainer = document.getElementById('imagePreviewContainer');
+
+            for (let i = 0; i < files.length; i++) {
+                if (uploadedImages.length >= 9) {
+                    alert('最多只能上传 9 张图片');
+                    break;
+                }
+
+                const file = files[i];
+
+                if (file.size > 16 * 1024 * 1024) {
+                    alert(`图片 "${file.name}" 超过 16MB，请选择更小的图片`);
+                    continue;
+                }
+
+                // 直接转为 base64
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64 = e.target.result; // 完整的 data:image/xxx;base64,xxx
+
+                    // 保存到数组
+                    uploadedImages.push(base64);
+
+                    // 创建预览
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'image-preview-item';
+                    previewDiv.dataset.index = uploadedImages.length - 1;
+
+                    const img = document.createElement('img');
+                    img.src = base64;
+
+                    const removeBtn = document.createElement('div');
+                    removeBtn.className = 'remove-btn';
+                    removeBtn.innerHTML = '×';
+                    removeBtn.onclick = () => removeImage(previewDiv);
+
+                    previewDiv.appendChild(img);
+                    previewDiv.appendChild(removeBtn);
+                    previewContainer.appendChild(previewDiv);
+
+                    // 更新计数
+                    document.getElementById('imageCount').textContent = `已选择 ${uploadedImages.length} 张`;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            event.target.value = '';
+        }
+
+        // 删除图片
+        function removeImage(previewElement) {
+            const index = parseInt(previewElement.dataset.index);
+            uploadedImages.splice(index, 1);
+
+            // 更新所有预览元素的索引
+            const allPreviews = document.querySelectorAll('.image-preview-item');
+            allPreviews.forEach((el, idx) => {
+                el.dataset.index = idx;
+            });
+
+            previewElement.remove();
+            updateImageCount();
+        }
+
+        async function simulateForward() {
+            const studentId = document.getElementById('studentSelect').value;
+            const message = document.getElementById('messageInput').value.trim();
+
+            if (!studentId) {
+                alert('请先选择学生');
+                return;
+            }
+
+            if (!message && uploadedImages.length === 0) {
+                alert('请输入老师消息或添加图片');
+                return;
+            }
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ AI 正在解析并创建任务...';
+
+            try {
+                // 第一步：AI 解析
+                const simulateResponse = await fetch(`${API_BASE}/api/simulate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        images: uploadedImages
+                    })
+                });
+
+                const simulateResult = await simulateResponse.json();
+
+                if (!simulateResult.success) {
+                    throw new Error(simulateResult.error || 'AI 解析失败');
+                }
+
+                btn.textContent = '⏳ 正在分配给学生...';
+
+                // 第二步：自动确认并分配给选中的学生
+                const confirmResponse = await fetch(`${API_BASE}/api/confirm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pending_id: simulateResult.pending_id,
+                        student_id: studentId
+                    })
+                });
+
+                const confirmResult = await confirmResponse.json();
+
+                const resultDiv = document.getElementById('result');
+                const contentDiv = document.getElementById('resultContent');
+
+                if (confirmResult.success) {
+                    // 计算创建的任务数量
+                    const taskCount = confirmResult.task_count || (confirmResult.task_id ? 1 : 0) || simulateResult.total_tasks;
+
+                    contentDiv.innerHTML = `
+                        <p style="font-size: 15px; margin-bottom: 12px;">
+                            <strong>✅ 成功创建 ${taskCount} 条任务！</strong>
+                        </p>
+                        <p style="margin: 8px 0;">
+                            <a href="/my-tasks"
+                               style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                                👉 查看任务中心
+                            </a>
+                        </p>
+                    `;
+                    resultDiv.classList.add('show');
+
+                    // 清空输入
+                    document.getElementById('messageInput').value = '';
+                    document.getElementById('imagePreviewContainer').innerHTML = '';
+                    uploadedImages = [];
+                    document.getElementById('imageCount').textContent = '已选择 0 张';
+                    document.getElementById('studentSelect').value = '';
+                } else {
+                    contentDiv.innerHTML = `
+                        <p style="color: #dc3545;">❌ 创建任务失败：${confirmResult.error}</p>
+                        <p style="font-size: 13px; margin-top: 8px;">
+                            AI 解析已成功，您可以<a href="/confirm?pending_id=${simulateResult.pending_id}" style="color: #667eea;">手动确认</a>
+                        </p>
+                    `;
+                    resultDiv.classList.add('show');
+                }
+
+            } catch (error) {
+                const resultDiv = document.getElementById('result');
+                const contentDiv = document.getElementById('resultContent');
+                contentDiv.innerHTML = `<p style="color: #dc3545;">❌ 操作失败：${error.message}</p>`;
+                resultDiv.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🚀 AI 智能解析并创建任务';
+            }
+        }
+    </script>
+</body>
+</html>

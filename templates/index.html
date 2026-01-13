@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家校任务管理助手 - API 测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .status {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            flex: 1;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .status-item h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .status-item p {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-ok {
+            color: #10b981 !important;
+        }
+
+        .status-error {
+            color: #ef4444 !important;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .result pre {
+            background: #1e293b;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+
+        .student-list {
+            margin-bottom: 20px;
+        }
+
+        .student-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .student-item:hover {
+            background: #e9ecef;
+        }
+
+        .student-item.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 家校任务管理助手</h1>
+            <p>API 测试控制台</p>
+        </div>
+
+        <!-- 系统状态 -->
+        <div class="card">
+            <h2>📊 系统状态</h2>
+            <div class="status">
+                <div class="status-item">
+                    <h3>API 服务</h3>
+                    <p id="api-status">检查中...</p>
+                </div>
+                <div class="status-item">
+                    <h3>数据库</h3>
+                    <p id="db-status">检查中...</p>
+                </div>
+                <div class="status-item">
+                    <h3>LLM 模型</h3>
+                    <p id="llm-status">检查中...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能选项卡 -->
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('test-parse')">📝 测试解析</button>
+                <button class="tab" onclick="switchTab('view-tasks')">📋 查看任务</button>
+                <button class="tab" onclick="switchTab('metrics')">📈 系统指标</button>
+            </div>
+
+            <!-- 测试解析 -->
+            <div id="test-parse" class="tab-content active">
+                <h2>测试 LLM 解析</h2>
+                <div class="form-group">
+                    <label>输入测试消息：</label>
+                    <textarea id="test-message" placeholder="例如：明天请背诵《山行》，并抄写三遍"></textarea>
+                </div>
+                <button class="btn" onclick="testParse()">🚀 解析消息</button>
+                <div class="loading" id="parse-loading">
+                    <div class="spinner"></div>
+                    <p>AI 正在解析中...</p>
+                </div>
+                <div class="result" id="parse-result">
+                    <h3>解析结果：</h3>
+                    <pre id="parse-output"></pre>
+                </div>
+            </div>
+
+            <!-- 查看任务 -->
+            <div id="view-tasks" class="tab-content">
+                <h2>查看学生任务</h2>
+                <div class="form-group">
+                    <label>选择学生：</label>
+                    <div class="student-list" id="student-list">
+                        <!-- 学生列表将动态加载 -->
+                    </div>
+                </div>
+                <div class="result" id="tasks-result">
+                    <h3>任务列表：</h3>
+                    <pre id="tasks-output"></pre>
+                </div>
+            </div>
+
+            <!-- 系统指标 -->
+            <div id="metrics" class="tab-content">
+                <h2>系统指标</h2>
+                <button class="btn" onclick="loadMetrics()">🔄 刷新指标</button>
+                <div class="result" id="metrics-result">
+                    <h3>指标数据：</h3>
+                    <pre id="metrics-output"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5001';
+
+        // 测试学生数据
+        const students = [
+            { id: '704d76e9-9c8b-485e-84a2-5728b2ecbcdb', name: '小明', grade: '三年级' },
+            { id: 'f88ead9b-c640-4904-a44c-f875ec526409', name: '小红', grade: '一年级' }
+        ];
+
+        // 页面加载时检查状态
+        window.onload = function() {
+            checkHealth();
+            loadStudents();
+        };
+
+        // 检查系统健康状态
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+
+                document.getElementById('api-status').innerHTML =
+                    `<span class="status-ok">✓ 正常</span>`;
+                document.getElementById('api-status').className = 'status-ok';
+
+                document.getElementById('db-status').innerHTML =
+                    data.checks.database === 'ok'
+                        ? `<span class="status-ok">✓ 正常</span>`
+                        : `<span class="status-error">✗ 异常</span>`;
+
+                document.getElementById('llm-status').innerHTML =
+                    data.checks.llm_api === 'configured'
+                        ? `<span class="status-ok">✓ 已配置</span>`
+                        : `<span class="status-error">✗ 未配置</span>`;
+            } catch (error) {
+                document.getElementById('api-status').innerHTML =
+                    `<span class="status-error">✗ 无法连接</span>`;
+                document.getElementById('api-status').className = 'status-error';
+            }
+        }
+
+        // 加载学生列表
+        function loadStudents() {
+            const container = document.getElementById('student-list');
+            container.innerHTML = students.map(s => `
+                <div class="student-item" onclick="selectStudent('${s.id}', '${s.name}')">
+                    <strong>${s.name}</strong> (${s.grade})
+                    <br><small style="color: #666;">ID: ${s.id.substring(0, 20)}...</small>
+                </div>
+            `).join('');
+        }
+
+        // 选择学生
+        async function selectStudent(studentId, studentName) {
+            try {
+                const response = await fetch(`${API_BASE}/api/tasks/${studentId}`);
+                const data = await response.json();
+
+                const resultDiv = document.getElementById('tasks-result');
+                const outputDiv = document.getElementById('tasks-output');
+
+                resultDiv.classList.add('show');
+                outputDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                alert('获取任务失败：' + error.message);
+            }
+        }
+
+        // 测试解析
+        async function testParse() {
+            const message = document.getElementById('test-message').value.trim();
+            if (!message) {
+                alert('请输入测试消息');
+                return;
+            }
+
+            const loading = document.getElementById('parse-loading');
+            const result = document.getElementById('parse-result');
+            const output = document.getElementById('parse-output');
+
+            loading.classList.add('show');
+            result.classList.remove('show');
+
+            try {
+                // 模拟解析结果（因为需要后端接口）
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                const mockResult = {
+                    intent: 'assignment',
+                    subject: '语文',
+                    deadline: null,
+                    description: '背诵《山行》并抄写三遍',
+                    confidence: 0.9,
+                    need_confirm: true,
+                    raw_text: message
+                };
+
+                loading.classList.remove('show');
+                result.classList.add('show');
+                output.textContent = JSON.stringify(mockResult, null, 2);
+            } catch (error) {
+                loading.classList.remove('show');
+                alert('解析失败：' + error.message);
+            }
+        }
+
+        // 加载系统指标
+        async function loadMetrics() {
+            try {
+                const response = await fetch(`${API_BASE}/metrics`);
+                const data = await response.json();
+
+                const result = document.getElementById('metrics-result');
+                const output = document.getElementById('metrics-output');
+
+                result.classList.add('show');
+                output.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                alert('获取指标失败：' + error.message);
+            }
+        }
+
+        // 切换选项卡
+        function switchTab(tabId) {
+            // 隐藏所有内容
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // 显示选中的内容
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

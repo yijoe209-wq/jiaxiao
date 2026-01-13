@@ -1,0 +1,78 @@
+# Zeabur 部署配置
+# 文档：https://zeabur.com/docs/
+
+# 服务配置
+services:
+  # 主应用服务
+  - type: prebuilt
+    name: jiaxiao
+    # 构建配置
+    buildCommand:
+      - pip install -r requirements.txt
+
+    # 启动命令
+    startCommand: gunicorn -w 2 -b 0.0.0.0:$PORT app:app
+
+    # 环境变量
+    env:
+      # Python 环境
+      - PYTHON_ENV=production
+      - PORT=5001
+
+      # 数据库配置（使用 Zeabur PostgreSQL）
+      - DATABASE_URL=${{Postgres-JIAXIAO.DATABASE_URL}
+
+      # LLM API（需要在 Zeabur 控制台配置）
+      - LLM_API_KEY=${{LLM_API_KEY}}
+      - LLM_BASE_URL=https://api.deepseek.com
+
+      # 微信配置（可选，如果使用微信公众号）
+      - WECHAT_TOKEN=${{WECHAT_TOKEN}
+      - WECHAT_APPID=${{WECHAT_APPID}
+      - WECHAT_SECRET=${{WECHAT_SECRET}
+
+      # 服务配置
+      - ENV=production
+      - DEBUG=False
+      - SERVER_URL=${{ZEABUR_URL}
+
+    # 依赖服务
+    depends_on:
+      - Postgres-JIAXIAO
+
+    # 持久化存储（用于文件上传等）
+    volumes:
+      - /app/data:/data
+
+    # 健康检查
+    healthCheck:
+      http:
+        port: 5001
+        path: /health
+        interval: 30s
+        timeout: 10s
+        failureThreshold: 3
+
+    # 资源限制（免费套餐）
+    resources:
+      memory: 512Mi
+      cpu: 0.5
+
+  # PostgreSQL 数据库
+  - type: postgresql
+    name: Postgres-JIAXIAO
+    version: "15"
+    # 数据库配置
+    username: jiaxiao
+    password: ${{Postgres-JIAXIAO.PASSWORD}}
+    database: jiaxiao_db
+    # 持久化存储
+    volumes:
+      - /var/lib/postgresql/data
+    # 资源限制
+    resources:
+      memory: 256Mi
+      cpu: 0.2
+
+# 全局配置
+version: 2

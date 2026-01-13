@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务管理 - 家校助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        /* 筛选区域 */
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        select, button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .quick-filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .quick-filter-btn {
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-filter-btn:hover {
+            background: #e9ecef;
+        }
+
+        .quick-filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .quick-filter-btn .badge {
+            background: rgba(255,255,255,0.3);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        .quick-filter-btn.active .badge {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* 统计卡片 */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .stat-card.urgent {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+        }
+
+        .stat-card.warning {
+            background: linear-gradient(135deg, #feca57 0%, #ff9f43 100%);
+            color: white;
+        }
+
+        .stat-card.normal {
+            background: linear-gradient(135deg, #48dbfb 0%, #0abde3 100%);
+            color: white;
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* 任务列表 */
+        .task-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .task-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            border-left: 4px solid #667eea;
+        }
+
+        .task-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .task-card.urgent {
+            border-left-color: #ff6b6b;
+            background: linear-gradient(to right, #fff5f5, white);
+        }
+
+        .task-card.warning {
+            border-left-color: #feca57;
+            background: linear-gradient(to right, #fff9e5, white);
+        }
+
+        .task-card.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .task-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .meta-item .icon {
+            font-size: 16px;
+        }
+
+        .deadline-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .deadline-badge.urgent {
+            background: #ffe5e5;
+            color: #ff6b6b;
+        }
+
+        .deadline-badge.warning {
+            background: #fff4e5;
+            color: #feca57;
+        }
+
+        .deadline-badge.normal {
+            background: #e8f4fd;
+            color: #48dbfb;
+        }
+
+        .task-type {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .task-type.阅读 { background: #e3f2fd; color: #1976d2; }
+        .task-type.背诵 { background: #fff3e0; color: #f57c00; }
+        .task-type.书写 { background: #f3e5f5; color: #7b1fa2; }
+        .task-type.练习 { background: #e8f5e9; color: #388e3c; }
+        .task-type.听写 { background: #fce4ec; color: #c2185b; }
+        .task-type.其他 { background: #eceff1; color: #455a64; }
+
+        .task-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 任务管理中心</h1>
+            <p>轻松管理孩子的学习任务</p>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats-cards">
+            <div class="stat-card urgent">
+                <div class="number" id="urgentCount">0</div>
+                <div class="label">🔥 紧急（今天到期）</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="number" id="warningCount">0</div>
+                <div class="label">⚠️ 警告（明天到期）</div>
+            </div>
+            <div class="stat-card normal">
+                <div class="number" id="pendingCount">0</div>
+                <div class="label">📝 待完成</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="totalCount">0</div>
+                <div class="label">📊 全部任务</div>
+            </div>
+        </div>
+
+        <!-- 筛选区域 -->
+        <div class="filter-section">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>学生：</label>
+                    <select id="studentFilter" onchange="filterTasks()">
+                        <option value="all">全部学生</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>科目：</label>
+                    <select id="subjectFilter" onchange="filterTasks()">
+                        <option value="all">全部科目</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>状态：</label>
+                    <select id="statusFilter" onchange="filterTasks()">
+                        <option value="all">全部状态</option>
+                        <option value="pending">待完成</option>
+                        <option value="completed">已完成</option>
+                    </select>
+                </div>
+            </div>
+            <div class="quick-filters">
+                <button class="quick-filter-btn active" onclick="setQuickFilter('all')">
+                    全部任务
+                </button>
+                <button class="quick-filter-btn" onclick="setQuickFilter('today')">
+                    🔥 今天要完成 <span class="badge" id="todayBadge">0</span>
+                </button>
+                <button class="quick-filter-btn" onclick="setQuickFilter('week')">
+                    📅 本周任务 <span class="badge" id="weekBadge">0</span>
+                </button>
+                <button class="quick-filter-btn" onclick="setQuickFilter('overdue')">
+                    ⚠️ 已逾期 <span class="badge" id="overdueBadge">0</span>
+                </button>
+                <button class="quick-filter-btn" onclick="setQuickFilter('pending')">
+                    📝 待完成 <span class="badge" id="pendingBadge">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 任务列表 -->
+        <div id="taskList" class="task-list">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.protocol + '//' + window.location.hostname +
+                        (window.location.port ? ':' + window.location.port : '');
+
+        // 学生数据
+        const students = [
+            { id: '845d9d68-4c15-4a97-869e-bd0af18dbc67', name: '渲宇', grade: '七年级' },
+            { id: '0f3f8050-ce01-4397-809a-e4101dfb78e0', name: '梓萌', grade: '二年级' }
+        ];
+
+        let allTasks = [];
+        let currentQuickFilter = 'all';
+
+        // 页面加载
+        window.onload = function() {
+            initFilters();
+            loadTasks();
+        };
+
+        // 初始化筛选器
+        function initFilters() {
+            // 填充学生筛选器
+            const studentFilter = document.getElementById('studentFilter');
+            students.forEach(s => {
+                const option = document.createElement('option');
+                option.value = s.id;
+                option.textContent = `${s.name}（${s.grade}）`;
+                studentFilter.appendChild(option);
+            });
+        }
+
+        // 加载所有任务
+        async function loadTasks() {
+            try {
+                const tasks = [];
+
+                // 获取所有学生的任务
+                for (const student of students) {
+                    const response = await fetch(`${API_BASE}/api/tasks/${student.id}`);
+                    const data = await response.json();
+
+                    data.tasks.forEach(task => {
+                        task.student_name = student.name;
+                        task.student_grade = student.grade;
+                    });
+
+                    tasks.push(...data.tasks);
+                }
+
+                allTasks = tasks;
+                updateStats();
+                filterTasks();
+
+            } catch (error) {
+                console.error('加载任务失败:', error);
+                document.getElementById('taskList').innerHTML = `
+                    <div class="empty-state">
+                        <p>❌ 加载失败，请刷新重试</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            const now = new Date();
+            const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+            const tomorrowEnd = new Date(todayEnd);
+            tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
+
+            let urgentCount = 0;  // 今天到期
+            let warningCount = 0;  // 明天到期
+            let pendingCount = 0;  // 待完成
+            let todayCount = 0;    // 今天要完成
+            let weekCount = 0;     // 本周
+            let overdueCount = 0;  // 已逾期
+
+            allTasks.forEach(task => {
+                if (task.is_completed) return;
+
+                pendingCount++;
+
+                if (task.deadline) {
+                    const deadline = new Date(task.deadline);
+                    if (deadline <= todayEnd) {
+                        urgentCount++;
+                        todayCount++;
+                    } else if (deadline <= tomorrowEnd) {
+                        warningCount++;
+                    }
+
+                    if (deadline < now && !task.is_completed) {
+                        overdueCount++;
+                    }
+
+                    // 本日
+                    const weekEnd = new Date(now);
+                    weekEnd.setDate(weekEnd.getDate() + 7);
+                    if (deadline <= weekEnd) {
+                        weekCount++;
+                    }
+                } else {
+                    // 没有截止时间的也算待完成
+                    todayCount++;
+                }
+            });
+
+            document.getElementById('urgentCount').textContent = urgentCount;
+            document.getElementById('warningCount').textContent = warningCount;
+            document.getElementById('pendingCount').textContent = pendingCount;
+            document.getElementById('totalCount').textContent = allTasks.length;
+            document.getElementById('todayBadge').textContent = todayCount;
+            document.getElementById('weekBadge').textContent = weekCount;
+            document.getElementById('overdueBadge').textContent = overdueCount;
+            document.getElementById('pendingBadge').textContent = pendingCount;
+        }
+
+        // 快速筛选
+        function setQuickFilter(filter) {
+            currentQuickFilter = filter;
+
+            // 更新按钮状态
+            document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            filterTasks();
+        }
+
+        // 筛选任务
+        function filterTasks() {
+            const studentId = document.getElementById('studentFilter').value;
+            const subject = document.getElementById('subjectFilter').value;
+            const status = document.getElementById('statusFilter').value;
+
+            const now = new Date();
+            const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+            const tomorrowEnd = new Date(todayEnd);
+            tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
+
+            let filtered = allTasks.filter(task => {
+                // 学生筛选
+                if (studentId !== 'all' && task.student_id !== studentId) return false;
+
+                // 状态筛选
+                if (status === 'pending' && task.is_completed) return false;
+                if (status === 'completed' && !task.is_completed) return false;
+
+                // 科目筛选
+                if (subject !== 'all' && task.subject !== subject) return false;
+
+                // 快速筛选
+                if (currentQuickFilter === 'today') {
+                    // 今天要完成（包含今天到期和未设置截止时间的）
+                    if (task.is_completed) return false;
+                    if (!task.deadline) return true;  // 没有截止时间的也算
+                    const deadline = new Date(task.deadline);
+                    return deadline <= todayEnd;
+                }
+
+                if (currentQuickFilter === 'week') {
+                    // 本周
+                    if (task.is_completed) return false;
+                    if (!task.deadline) return true;
+                    const weekEnd = new Date(now);
+                    weekEnd.setDate(weekEnd.getDate() + 7);
+                    return new Date(task.deadline) <= weekEnd;
+                }
+
+                if (currentQuickFilter === 'overdue') {
+                    // 已逾期
+                    if (task.is_completed) return false;
+                    if (!task.deadline) return false;
+                    return new Date(task.deadline) < now;
+                }
+
+                if (currentQuickFilter === 'pending') {
+                    // 待完成
+                    return !task.is_completed;
+                }
+
+                return true;
+            });
+
+            renderTasks(filtered);
+            updateSubjectFilter();
+        }
+
+        // 更新科目筛选器（动态填充）
+        function updateSubjectFilter() {
+            const subjects = [...new Set(allTasks.map(t => t.subject).filter(Boolean))];
+            const subjectFilter = document.getElementById('subjectFilter');
+            const currentValue = subjectFilter.value;
+
+            subjectFilter.innerHTML = '<option value="all">全部科目</option>';
+            subjects.forEach(s => {
+                const option = document.createElement('option');
+                option.value = s;
+                option.textContent = s || '未分类';
+                subjectFilter.appendChild(option);
+            });
+
+            subjectFilter.value = currentValue;
+        }
+
+        // 渲染任务列表
+        function renderTasks(tasks) {
+            const container = document.getElementById('taskList');
+
+            if (tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>没有符合条件的任务</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 按截止时间排序
+            tasks.sort((a, b) => {
+                if (!a.deadline) return 1;
+                if (!b.deadline) return -1;
+                return new Date(a.deadline) - new Date(b.deadline);
+            });
+
+            const now = new Date();
+            const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+            const tomorrowEnd = new Date(todayEnd);
+            tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
+
+            container.innerHTML = tasks.map(task => {
+                let urgencyClass = '';
+                let deadlineClass = 'normal';
+                let deadlineText = '无截止时间';
+
+                if (task.deadline) {
+                    const deadline = new Date(task.deadline);
+                    const diffDays = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+
+                    if (deadline < now && !task.is_completed) {
+                        urgencyClass = 'urgent';
+                        deadlineClass = 'urgent';
+                        deadlineText = `已逾期 ${Math.abs(diffDays)} 天`;
+                    } else if (deadline <= todayEnd) {
+                        urgencyClass = 'urgent';
+                        deadlineClass = 'urgent';
+                        deadlineText = '今天到期';
+                    } else if (deadline <= tomorrowEnd) {
+                        urgencyClass = 'warning';
+                        deadlineClass = 'warning';
+                        deadlineText = '明天到期';
+                    } else {
+                        deadlineText = deadline.toLocaleDateString();
+                    }
+                }
+
+                return `
+                    <div class="task-card ${urgencyClass} ${task.is_completed ? 'completed' : ''}">
+                        <div class="task-header">
+                            <div class="task-title">${task.description}</div>
+                            <button class="btn btn-success" onclick="toggleComplete('${task.task_id}')">
+                                ${task.is_completed ? '✓ 已完成' : '○ 标记完成'}
+                            </button>
+                        </div>
+
+                        <div class="task-meta">
+                            <div class="meta-item">
+                                <span class="icon">👤</span>
+                                <span>${task.student_name}（${task.student_grade}）</span>
+                            </div>
+                            ${task.subject ? `
+                                <div class="meta-item">
+                                    <span class="icon">📚</span>
+                                    <span>${task.subject}</span>
+                                </div>
+                            ` : ''}
+                            <div class="meta-item">
+                                <span class="icon">📅</span>
+                                <span class="deadline-badge ${deadlineClass}">${deadlineText}</span>
+                            </div>
+                            ${task.task_type ? `
+                                <div class="meta-item">
+                                    <span class="task-type ${task.task_type}">${task.task_type}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        ${task.details ? `<div class="task-description">${task.details}</div>` : ''}
+
+                        ${task.attachments && task.attachments.length > 0 ? `
+                            <div class="task-meta">
+                                <div class="meta-item">
+                                    <span class="icon">📎</span>
+                                    <span>${task.attachments.length} 个附件</span>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 切换完成状态
+        async function toggleComplete(taskId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/tasks/${taskId}/complete`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 重新加载任务
+                    loadTasks();
+                } else {
+                    alert('操作失败：' + result.error);
+                }
+            } catch (error) {
+                alert('操作失败：' + error.message);
+            }
+        }
+
+        // 定时刷新（每30秒）
+        setInterval(loadTasks, 30000);
+    </script>
+</body>
+</html>

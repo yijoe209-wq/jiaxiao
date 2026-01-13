@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "Bash(curl:*)",
+      "Bash(lsof:*)",
+      "Bash(sqlite3:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(tee:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}

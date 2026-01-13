@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>微信多选消息模拟器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #ededed;
+            padding: 0;
+            margin: 0;
+        }
+
+        .wechat-header {
+            background: #ededed;
+            padding: 12px 16px;
+            border-bottom: 1px solid #dcdcdc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .wechat-header h1 {
+            font-size: 17px;
+            font-weight: 500;
+            color: #000;
+        }
+
+        .wechat-header .back-btn {
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .toolbar {
+            background: #f7f7f7;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .toolbar .info {
+            font-size: 14px;
+            color: #000;
+        }
+
+        .toolbar .actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .toolbar .action-btn {
+            background: none;
+            border: none;
+            color: #000;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .toolbar .forward-btn {
+            background: #07c160;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .message-list {
+            background: white;
+            min-height: 100vh;
+            padding: 20px 16px;
+        }
+
+        .message-item {
+            display: flex;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .message-item.selected .checkbox {
+            background: #07c160;
+            border-color: #07c160;
+        }
+
+        .message-item.selected .checkbox::after {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #c7c7cc;
+            border-radius: 50%;
+            margin-right: 10px;
+            flex-shrink: 0;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            flex: 1;
+            max-width: 70%;
+        }
+
+        .sender-name {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+
+        .message-bubble {
+            background: #96ec6d;
+            padding: 10px 12px;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .message-bubble.text {
+            background: #96ec6d;
+        }
+
+        .message-bubble.image {
+            background: transparent;
+            padding: 0;
+        }
+
+        .message-text {
+            font-size: 16px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .message-image {
+            max-width: 100%;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .result-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .result-modal.show {
+            display: flex;
+        }
+
+        .result-content {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .result-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .result-success {
+            text-align: center;
+        }
+
+        .result-success .icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .result-success p {
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .result-link {
+            display: block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .result-close {
+            display: block;
+            padding: 10px;
+            background: #f5f5f5;
+            color: #666;
+            text-decoration: none;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .help-tip {
+            background: #fff7e6;
+            border-left: 3px solid #ffa940;
+            padding: 12px 16px;
+            margin: 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #ad6800;
+            line-height: 1.6;
+        }
+
+        .help-tip strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wechat-header">
+        <span class="back-btn">‹</span>
+        <h1>班级群 (38)</h1>
+    </div>
+
+    <div class="help-tip">
+        <strong>💡 使用说明</strong>
+        这是模拟微信群多选消息的演示页面。点击每条消息左侧的圆圈选中消息和图片，然后点击"转发"按钮。
+    </div>
+
+    <div class="toolbar">
+        <span class="info" id="selectedInfo">未选择消息</span>
+        <div class="actions">
+            <button class="action-btn" onclick="selectAll()">全选</button>
+            <button class="action-btn" onclick="clearSelection()">清空</button>
+            <button class="forward-btn" onclick="forwardMessages()">转发 (0)</button>
+        </div>
+    </div>
+
+    <div class="message-list" id="messageList">
+        <!-- 消息列表会动态生成 -->
+    </div>
+
+    <!-- 结果弹窗 -->
+    <div class="result-modal" id="resultModal">
+        <div class="result-content">
+            <div class="result-success">
+                <div class="icon">✅</div>
+                <h2>AI 解析成功</h2>
+                <p id="resultText">已识别任务</p>
+                <a href="#" class="result-link" id="confirmLink">👉 点此确认任务</a>
+                <a href="#" class="result-close" onclick="closeModal()">关闭</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 自动检测 API 地址
+        const API_BASE = window.location.protocol + '//' + window.location.hostname +
+                        (window.location.port ? ':' + window.location.port : '');
+
+        // 模拟的群消息数据
+        const mockMessages = [
+            {
+                id: 1,
+                sender: '张老师',
+                avatar: '张',
+                type: 'text',
+                content: `语文作业：
+
+1.阅读打卡：
+朗读《语文园地八》这课，会认字和会写字口头拼读并组词。
+朗读课外读物，写阅读笔记。
+
+2.背诵课本1--8单元要求背诵的所有内容。
+背诵课本105页的成语和日积月累，录音上传小管家。
+
+3.认真修改作业本里面的错误。`,
+                time: '14:30'
+            },
+            {
+                id: 2,
+                sender: '张老师',
+                avatar: '张',
+                type: 'image',
+                content: 'https://picsum.photos/400/300?random=1',
+                time: '14:31'
+            },
+            {
+                id: 3,
+                sender: '张老师',
+                avatar: '张',
+                type: 'text',
+                content: `4.书写《快乐的小河》和《语文园地八》的会写字，三字两词加拼音。
+
+词语表《快乐的小河》这课，每个词语写两遍，加拼音。
+
+5.课本105页的成语，每个写2遍，加拼音。`,
+                time: '14:31'
+            },
+            {
+                id: 4,
+                sender: '张老师',
+                avatar: '张',
+                type: 'image',
+                content: 'https://picsum.photos/400/300?random=2',
+                time: '14:32'
+            },
+            {
+                id: 5,
+                sender: '张老师',
+                avatar: '张',
+                type: 'text',
+                content: `6.完成青橙派习题中《快乐的小河》和《语文园地八》这课。
+
+7.周一听写《称赞》这课剩余的词语和《纸船和风筝》这课的词语，提前准备，自行练习。`,
+                time: '14:32'
+            }
+        ];
+
+        let selectedMessages = new Set();
+        let selectedImages = [];
+
+        // 初始化消息列表
+        function initMessages() {
+            const container = document.getElementById('messageList');
+            container.innerHTML = mockMessages.map(msg => `
+                <div class="message-item" data-id="${msg.id}" onclick="toggleMessage(${msg.id})">
+                    <div class="checkbox"></div>
+                    <div class="avatar">${msg.avatar}</div>
+                    <div class="message-content">
+                        <div class="sender-name">${msg.sender}</div>
+                        <div class="message-bubble ${msg.type}">
+                            ${msg.type === 'text'
+                                ? `<div class="message-text">${escapeHtml(msg.content)}</div>`
+                                : `<img src="${msg.content}" class="message-image" alt="作业图片" onclick="event.stopPropagation(); previewImage('${msg.content}')">`
+                            }
+                        </div>
+                        <div class="message-time">${msg.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 切换消息选中状态
+        function toggleMessage(id) {
+            const msg = mockMessages.find(m => m.id === id);
+            const element = document.querySelector(`[data-id="${id}"]`);
+
+            if (selectedMessages.has(id)) {
+                selectedMessages.delete(id);
+                if (msg.type === 'image') {
+                    selectedImages = selectedImages.filter(img => img !== msg.content);
+                }
+                element.classList.remove('selected');
+            } else {
+                selectedMessages.add(id);
+                if (msg.type === 'image') {
+                    selectedImages.push(msg.content);
+                }
+                element.classList.add('selected');
+            }
+
+            updateToolbar();
+        }
+
+        // 更新工具栏
+        function updateToolbar() {
+            const count = selectedMessages.size;
+            document.getElementById('selectedInfo').textContent =
+                count > 0 ? `已选择 ${count} 条消息` : '未选择消息';
+            document.querySelector('.forward-btn').textContent = `转发 (${count})`;
+        }
+
+        // 全选
+        function selectAll() {
+            mockMessages.forEach(msg => {
+                if (!selectedMessages.has(msg.id)) {
+                    toggleMessage(msg.id);
+                }
+            });
+        }
+
+        // 清空选择
+        function clearSelection() {
+            selectedMessages.clear();
+            selectedImages = [];
+            document.querySelectorAll('.message-item').forEach(el => {
+                el.classList.remove('selected');
+            });
+            updateToolbar();
+        }
+
+        // 转发消息
+        async function forwardMessages() {
+            if (selectedMessages.size === 0) {
+                alert('请先选择要转发的消息');
+                return;
+            }
+
+            // 收集所有文本内容
+            const textMessages = mockMessages
+                .filter(m => selectedMessages.has(m.id) && m.type === 'text')
+                .map(m => m.content)
+                .join('\n\n');
+
+            const btn = document.querySelector('.forward-btn');
+            btn.textContent = '⏳ AI 解析中...';
+            btn.disabled = true;
+
+            try {
+                // 调用模拟转发 API
+                const response = await fetch(`${API_BASE}/api/simulate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: textMessages,
+                        images: selectedImages
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 显示结果弹窗
+                    document.getElementById('resultText').textContent =
+                        `已识别 ${result.total_tasks} 条任务`;
+                    document.getElementById('confirmLink').href =
+                        `${API_BASE}/confirm?pending_id=${result.pending_id}`;
+                    document.getElementById('resultModal').classList.add('show');
+                } else {
+                    alert('解析失败：' + result.error);
+                }
+            } catch (error) {
+                alert('操作失败：' + error.message);
+            } finally {
+                btn.textContent = `转发 (${selectedMessages.size})`;
+                btn.disabled = false;
+            }
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('resultModal').classList.remove('show');
+        }
+
+        // 预览图片
+        function previewImage(url) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.9); z-index: 2000;
+                display: flex; align-items: center; justify-content: center;
+                cursor: pointer;
+            `;
+            modal.onclick = () => document.body.removeChild(modal);
+
+            const img = document.createElement('img');
+            img.src = url;
+            img.style.cssText = `
+                max-width: 90%; max-height: 90%;
+                object-fit: contain;
+            `;
+
+            modal.appendChild(img);
+            document.body.appendChild(modal);
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 初始化
+        window.onload = function() {
+            initMessages();
+        };
+    </script>
+</body>
+</html>
