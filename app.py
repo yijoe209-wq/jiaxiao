@@ -1271,8 +1271,24 @@ def confirm_task():
 @app.route('/api/tasks/<student_id>')
 def get_student_tasks(student_id):
     """获取学生的任务列表"""
+    family_id = get_current_family_id()
+
+    if not family_id:
+        return jsonify({'error': '未登录'}), 401
+
     session = db.get_session()
     try:
+        # 验证学生是否属于当前家庭
+        student = session.query(Student).filter_by(
+            student_id=student_id
+        ).first()
+
+        if not student:
+            return jsonify({'error': '学生不存在'}), 404
+
+        if student.family_id != family_id:
+            return jsonify({'error': '无权访问此学生的任务'}), 403
+
         # 返回所有任务（包括已完成），由前端过滤
         tasks = session.query(Task).filter_by(
             student_id=student_id
@@ -1293,12 +1309,25 @@ def get_student_tasks(student_id):
 @app.route('/api/tasks/<task_id>/complete', methods=['POST'])
 def complete_task(task_id):
     """标记任务完成"""
+    family_id = get_current_family_id()
+
+    if not family_id:
+        return jsonify({'error': '未登录'}), 401
+
     session = db.get_session()
     try:
         task = session.query(Task).filter_by(task_id=task_id).first()
 
         if not task:
             return jsonify({'error': '任务不存在'}), 404
+
+        # 验证任务所属学生是否属于当前家庭
+        student = session.query(Student).filter_by(
+            student_id=task.student_id
+        ).first()
+
+        if not student or student.family_id != family_id:
+            return jsonify({'error': '无权操作此任务'}), 403
 
         task.is_completed = True
         task.status = 'completed'
