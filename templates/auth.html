@@ -255,8 +255,8 @@
                     localStorage.setItem('family_id', result.family_id);
                     localStorage.setItem('parent_name', result.parent_name);
 
-                    // 跳转到首页
-                    window.location.href = '/';
+                    // 跳转到任务中心
+                    window.location.href = '/my-tasks';
                 } else {
                     showError(result.error || '登录失败');
                 }
@@ -289,7 +289,7 @@
                     localStorage.setItem('parent_name', parent_name);
 
                     alert('注册成功！即将跳转...');
-                    window.location.href = '/';
+                    window.location.href = '/my-tasks';
                 } else {
                     showError(result.error || '注册失败');
                 }
