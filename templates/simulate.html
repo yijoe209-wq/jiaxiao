@@ -3,13 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>作业助手</title>
+    <title>📚 家校任务助手</title>
     <!-- 微信内浏览器优化 -->
     <meta name="x5-orientation" content="portrait">
     <meta name="x5-fullscreen" content="true">
     <meta name="x5-page-mode" content="app">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fef3e2',
+                            100: '#fde9c7',
+                            200: '#fbd99b',
+                            300: '#f9c66d',
+                            400: '#f7b345',
+                            500: '#f5a11d',
+                            600: '#f48d12',
+                            700: '#f37907',
+                            800: '#f16501',
+                            900: '#ee4600',
+                        },
+                        accent: {
+                            50: '#e8f5e9',
+                            100: '#c8e6c9',
+                            200: '#a5d6a7',
+                            300: '#81c784',
+                            400: '#66bb6a',
+                            500: '#4caf50',
+                            600: '#43a047',
+                            700: '#388e3c',
+                            800: '#2e7d32',
+                            900: '#1b5e20',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans SC"', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'bounce-soft': 'bounceSoft 0.6s ease-in-out',
+                        'pulse-slow': 'pulse 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        bounceSoft: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-8px)' },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -18,298 +84,206 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #f5f7fa;
-            padding: 10px;
-            padding-bottom: 80px;
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #fef3e2 0%, #fff9f0 50%, #fef3e2 100%);
+            min-height: 100vh;
         }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
 
-        /* 紧凑的头部 */
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
         }
 
-        .header h1 {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 0;
+        ::-webkit-scrollbar-thumb {
+            background: #f5a11d;
+            border-radius: 10px;
         }
 
-        .nav-links {
-            display: flex;
-            gap: 6px;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #f48d12;
         }
 
-        .nav-links a {
-            padding: 6px 12px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 6px;
-            text-decoration: none;
-            color: white;
-            font-size: 13px;
+        /* 输入框焦点效果 */
+        .input-focus {
+            transition: all 0.3s ease;
         }
 
-        .card {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        .input-focus:focus {
+            border-color: #f5a11d;
+            box-shadow: 0 0 0 4px rgba(245, 161, 29, 0.1);
         }
 
-        .card h2 {
-            font-size: 16px;
-            margin-bottom: 12px;
-            color: #333;
+        /* 卡片悬停效果 */
+        .card-hover {
+            transition: all 0.3s ease;
         }
 
-        textarea {
-            width: 100%;
-            min-height: 120px;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            resize: vertical;
-            margin-bottom: 12px;
-            box-sizing: border-box;
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(245, 161, 29, 0.15);
         }
 
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
+        /* 按钮点击效果 */
+        .btn-press {
+            transition: all 0.15s ease;
         }
 
-        .btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
+        .btn-press:active {
+            transform: scale(0.97);
         }
 
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .result {
-            display: none;
-            padding: 15px;
-            background: #d4edda;
-            border-radius: 8px;
-            margin-top: 12px;
-        }
-
-        .result.show {
-            display: block;
-        }
-
-        .result h3 {
-            font-size: 16px;
-            margin-bottom: 10px;
-            color: #155724;
-        }
-
-        .image-upload-area {
-            margin-top: 12px;
-        }
-
-        .image-upload-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .image-upload-header strong {
-            font-size: 14px;
-            color: #333;
-        }
-
-        #imageCount {
-            font-size: 12px;
-            color: #999;
-        }
-
-        #imagePreviewContainer {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .image-preview-item {
-            position: relative;
-            width: 100%;
-            padding-bottom: 100%;
-            overflow: hidden;
-            border-radius: 6px;
-            background: #f8f9fa;
-        }
-
-        .image-preview-item img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .image-preview-item .remove-btn {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            width: 20px;
-            height: 20px;
-            background: rgba(220, 53, 69, 0.9);
-            color: white;
+        /* 加载动画 */
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #f5a11d;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .upload-btn {
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
             display: inline-block;
-            padding: 8px 16px;
-            background: #f8f9fa;
-            border: 2px dashed #dee2e6;
-            border-radius: 6px;
-            cursor: pointer;
-            color: #666;
-            font-size: 13px;
-            transition: all 0.2s;
         }
 
-        .upload-btn:hover {
-            background: #e9ecef;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        /* 底部收藏提示 */
-        .footer-tip {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-            border-top: 2px solid #667eea;
-            padding: 10px 15px;
-            font-size: 12px;
-            color: #667eea;
-            z-index: 1000;
-        }
-
-        .footer-tip strong {
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        @media (min-width: 768px) {
-            body {
-                padding: 20px;
-            }
-
-            .header {
-                padding: 20px 30px;
-                border-radius: 10px;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
-            .card {
-                padding: 25px;
-                border-radius: 10px;
-            }
+        /* 图片预览动画 */
+        .image-preview-item {
+            animation: fadeIn 0.3s ease-out;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <!-- 紧凑的头部 -->
-        <div class="header">
-            <h1>📚 作业助手</h1>
-            <div class="nav-links">
-                <a href="/my-tasks">📋 任务中心</a>
-                <a href="/tasks">✅ 待确认</a>
-                <a href="/students">👤 学生管理</a>
+<body class="pb-24">
+    <div class="max-w-2xl mx-auto px-4 py-6">
+        <!-- 头部导航 -->
+        <header class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl shadow-lg p-4 mb-6 animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-md">
+                        <span class="text-2xl">📚</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-white">家校任务助手</h1>
+                        <p class="text-primary-100 text-sm">智能解析作业 · 轻松管理任务</p>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- 输入卡片 -->
-        <div class="card">
-            <h2>📋 1. 选择学生</h2>
-            <div class="form-group">
-                <select id="studentSelect" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;">
-                    <option value="">请选择学生...</option>
+            <!-- 导航链接 -->
+            <nav class="flex flex-wrap gap-2">
+                <a href="/my-tasks" class="flex-1 min-w-[100px] bg-white/20 backdrop-blur-sm text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-white/30 transition-all text-center">
+                    <i class="fas fa-tasks mr-1.5"></i>任务中心
+                </a>
+                <a href="/students" class="flex-1 min-w-[100px] bg-white/20 backdrop-blur-sm text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-white/30 transition-all text-center">
+                    <i class="fas fa-user-graduate mr-1.5"></i>学生管理
+                </a>
+            </nav>
+        </header>
+
+        <!-- 主输入卡片 -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 card-hover animate-slide-up">
+            <div class="mb-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mr-3">
+                        <i class="fas fa-user-graduate text-primary-500 text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800">选择学生</h2>
+                        <p class="text-gray-500 text-sm">为哪位学生创建任务？</p>
+                    </div>
+                </div>
+                <select id="studentSelect" class="input-focus w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 focus:outline-none appearance-none cursor-pointer">
+                    <option value="">👇 请选择学生...</option>
                 </select>
             </div>
 
-            <h2>📝 2. 粘贴老师消息</h2>
-            <textarea id="messageInput" placeholder="在这里粘贴老师的作业消息...&#10;&#10;例如：&#10;今晚作业：&#10;1. 数学：完成课本第20页练习题，明天提交&#10;2. 语文：背诵古诗三首"></textarea>
-
-            <!-- 图片上传区域 -->
-            <div class="image-upload-area">
-                <div class="image-upload-header">
-                    <strong>📎 添加图片附件（可选，仅作附件不解析）</strong>
-                    <span id="imageCount">已选择 0 张</span>
+            <div class="mb-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-accent-100 rounded-xl flex items-center justify-center mr-3">
+                        <i class="fas fa-edit text-accent-500 text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800">粘贴老师消息</h2>
+                        <p class="text-gray-500 text-sm">AI 将自动识别任务内容</p>
+                    </div>
                 </div>
+                <textarea
+                    id="messageInput"
+                    rows="6"
+                    placeholder="在这里粘贴老师的作业消息...
 
-                <div id="imagePreviewContainer"></div>
-
-                <label class="upload-btn">
-                    📷 点击选择图片
-                    <input type="file" id="imageInput" accept="image/*" multiple style="display: none;" onchange="handleImageSelect(event)">
-                </label>
-                <span style="margin-left: 8px; font-size: 12px; color: #999;">支持 JPG、PNG，最多 9 张</span>
+例如：
+今晚作业：
+1. 数学：完成课本第20页练习题，明天提交
+2. 语文：背诵古诗三首，后天检查
+3. 英语：听写 Unit 3 单词"
+                    class="input-focus w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 focus:outline-none resize-none"></textarea>
             </div>
 
-            <button class="btn" onclick="simulateForward()" style="margin-top: 15px;">🚀 AI 智能解析并创建任务</button>
+            <!-- 图片上传区域 -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-secondary-100 rounded-xl flex items-center justify-center mr-3">
+                            <i class="fas fa-image text-secondary-500 text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-800">添加图片</h2>
+                            <p class="text-gray-500 text-sm">作业截图（可选）</p>
+                        </div>
+                    </div>
+                    <span id="imageCount" class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">已选 0 张</span>
+                </div>
 
-            <div class="result" id="result">
-                <h3>✅ 解析成功！</h3>
-                <div id="resultContent"></div>
+                <div id="imagePreviewContainer" class="grid grid-cols-3 gap-3 mb-3"></div>
+
+                <label class="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-all group">
+                    <input type="file" id="imageInput" accept="image/*" multiple class="hidden" onchange="handleImageSelect(event)">
+                    <i class="fas fa-camera text-gray-400 group-hover:text-primary-500 mr-2 text-lg"></i>
+                    <span class="text-gray-600 group-hover:text-primary-600 font-medium">点击选择图片</span>
+                </label>
+                <p class="text-xs text-gray-400 mt-2 text-center">支持 JPG、PNG 格式，最多 9 张</p>
+            </div>
+
+            <!-- 提交按钮 -->
+            <button onclick="simulateForward()" class="btn-press w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-4 rounded-xl font-bold text-base shadow-lg hover:shadow-xl hover:from-primary-600 hover:to-primary-700 transition-all flex items-center justify-center">
+                <i class="fas fa-magic mr-2 text-lg"></i>
+                <span>AI 智能解析并创建任务</span>
+            </button>
+
+            <!-- 结果展示 -->
+            <div id="result" class="hidden mt-6 animate-slide-up">
+                <div class="bg-accent-50 border-l-4 border-accent-500 rounded-xl p-5">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 bg-accent-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-check text-white text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex-1" id="resultContent"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- 底部收藏提示 -->
-    <div class="footer-tip">
-        <strong>💡 收藏到微信，下次快速访问</strong>
-        点击右上角 "···" → 收藏 → 下次在"我 → 收藏"中打开
+    <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t-2 border-primary-200 px-4 py-3 shadow-lg animate-slide-up">
+        <div class="max-w-2xl mx-auto">
+            <div class="flex items-center justify-center">
+                <i class="fas fa-lightbulb text-primary-500 mr-2 text-lg animate-pulse-slow"></i>
+                <span class="text-sm text-gray-700">
+                    <strong class="text-primary-600">收藏到微信</strong>
+                    <span class="text-gray-500">下次快速访问 · 点击右上角 ··· → 收藏</span>
+                </span>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -327,7 +301,7 @@
                     result.students.forEach(student => {
                         const option = document.createElement('option');
                         option.value = student.student_id;
-                        option.textContent = student.name;
+                        option.textContent = `${student.name} ${student.grade ? '· ' + student.grade : ''}`;
                         select.appendChild(option);
                     });
                 }
@@ -336,7 +310,7 @@
             }
         });
 
-        // 处理图片选择 - 直接转为 base64，不经过服务器上传
+        // 处理图片选择
         function handleImageSelect(event) {
             const files = event.target.files;
             if (!files || files.length === 0) return;
@@ -356,24 +330,21 @@
                     continue;
                 }
 
-                // 直接转为 base64
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const base64 = e.target.result; // 完整的 data:image/xxx;base64,xxx
-
-                    // 保存到数组
+                    const base64 = e.target.result;
                     uploadedImages.push(base64);
 
-                    // 创建预览
                     const previewDiv = document.createElement('div');
-                    previewDiv.className = 'image-preview-item';
+                    previewDiv.className = 'image-preview-item relative w-full pb-[100%] overflow-hidden rounded-xl bg-gray-100 shadow-sm';
                     previewDiv.dataset.index = uploadedImages.length - 1;
 
                     const img = document.createElement('img');
                     img.src = base64;
+                    img.className = 'absolute top-0 left-0 w-full h-full object-cover';
 
-                    const removeBtn = document.createElement('div');
-                    removeBtn.className = 'remove-btn';
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold hover:bg-red-600 transition-colors shadow-md';
                     removeBtn.innerHTML = '×';
                     removeBtn.onclick = () => removeImage(previewDiv);
 
@@ -381,8 +352,7 @@
                     previewDiv.appendChild(removeBtn);
                     previewContainer.appendChild(previewDiv);
 
-                    // 更新计数
-                    document.getElementById('imageCount').textContent = `已选择 ${uploadedImages.length} 张`;
+                    document.getElementById('imageCount').textContent = `已选 ${uploadedImages.length} 张`;
                 };
                 reader.readAsDataURL(file);
             }
@@ -395,14 +365,13 @@
             const index = parseInt(previewElement.dataset.index);
             uploadedImages.splice(index, 1);
 
-            // 更新所有预览元素的索引
             const allPreviews = document.querySelectorAll('.image-preview-item');
             allPreviews.forEach((el, idx) => {
                 el.dataset.index = idx;
             });
 
             previewElement.remove();
-            updateImageCount();
+            document.getElementById('imageCount').textContent = `已选 ${uploadedImages.length} 张`;
         }
 
         async function simulateForward() {
@@ -421,10 +390,9 @@
 
             const btn = event.target;
             btn.disabled = true;
-            btn.textContent = '⏳ AI 正在解析并创建任务...';
+            btn.innerHTML = '<div class="loading-spinner mr-2"></div><span>AI 正在解析...</span>';
 
             try {
-                // 第一步：AI 解析
                 const simulateResponse = await fetch(`${API_BASE}/api/simulate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -440,9 +408,8 @@
                     throw new Error(simulateResult.error || 'AI 解析失败');
                 }
 
-                btn.textContent = '⏳ 正在分配给学生...';
+                btn.innerHTML = '<div class="loading-spinner mr-2"></div><span>正在创建任务...</span>';
 
-                // 第二步：自动确认并分配给选中的学生
                 const confirmResponse = await fetch(`${API_BASE}/api/confirm`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -458,46 +425,45 @@
                 const contentDiv = document.getElementById('resultContent');
 
                 if (confirmResult.success) {
-                    // 计算创建的任务数量
                     const taskCount = confirmResult.task_count || (confirmResult.task_id ? 1 : 0) || simulateResult.total_tasks;
 
                     contentDiv.innerHTML = `
-                        <p style="font-size: 15px; margin-bottom: 12px;">
-                            <strong>✅ 成功创建 ${taskCount} 条任务！</strong>
-                        </p>
-                        <p style="margin: 8px 0;">
-                            <a href="/my-tasks"
-                               style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
-                                👉 查看任务中心
-                            </a>
-                        </p>
+                        <h3 class="text-lg font-bold text-accent-700 mb-2">🎉 成功创建 ${taskCount} 条任务！</h3>
+                        <p class="text-gray-600 text-sm mb-4">任务已添加到任务中心，快去查看吧</p>
+                        <a href="/my-tasks" class="inline-flex items-center px-6 py-3 bg-accent-500 text-white rounded-xl font-semibold hover:bg-accent-600 transition-colors shadow-md hover:shadow-lg">
+                            <i class="fas fa-arrow-right mr-2"></i>
+                            查看任务中心
+                        </a>
                     `;
-                    resultDiv.classList.add('show');
+                    resultDiv.classList.remove('hidden');
 
-                    // 清空输入
                     document.getElementById('messageInput').value = '';
                     document.getElementById('imagePreviewContainer').innerHTML = '';
                     uploadedImages = [];
-                    document.getElementById('imageCount').textContent = '已选择 0 张';
+                    document.getElementById('imageCount').textContent = '已选 0 张';
                     document.getElementById('studentSelect').value = '';
                 } else {
                     contentDiv.innerHTML = `
-                        <p style="color: #dc3545;">❌ 创建任务失败：${confirmResult.error}</p>
-                        <p style="font-size: 13px; margin-top: 8px;">
-                            AI 解析已成功，您可以<a href="/confirm?pending_id=${simulateResult.pending_id}" style="color: #667eea;">手动确认</a>
+                        <h3 class="text-lg font-bold text-red-600 mb-2">❌ 创建任务失败</h3>
+                        <p class="text-gray-600 text-sm mb-3">${confirmResult.error}</p>
+                        <p class="text-sm text-gray-500">
+                            AI 解析已成功，您可以<a href="/confirm?pending_id=${simulateResult.pending_id}" class="text-primary-600 font-medium hover:underline">手动确认</a>
                         </p>
                     `;
-                    resultDiv.classList.add('show');
+                    resultDiv.classList.remove('hidden');
                 }
 
             } catch (error) {
                 const resultDiv = document.getElementById('result');
                 const contentDiv = document.getElementById('resultContent');
-                contentDiv.innerHTML = `<p style="color: #dc3545;">❌ 操作失败：${error.message}</p>`;
-                resultDiv.classList.add('show');
+                contentDiv.innerHTML = `
+                    <h3 class="text-lg font-bold text-red-600 mb-2">❌ 操作失败</h3>
+                    <p class="text-gray-600 text-sm">${error.message}</p>
+                `;
+                resultDiv.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
-                btn.textContent = '🚀 AI 智能解析并创建任务';
+                btn.innerHTML = '<i class="fas fa-magic mr-2 text-lg"></i><span>AI 智能解析并创建任务</span>';
             }
         }
     </script>

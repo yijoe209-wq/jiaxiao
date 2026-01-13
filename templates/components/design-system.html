@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家校任务助手 - 设计系统</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // 温馨活泼的主色调
+                        primary: {
+                            50: '#fef3e2',
+                            100: '#fde9c7',
+                            200: '#fbd99b',
+                            300: '#f9c66d',
+                            400: '#f7b345',
+                            500: '#f5a11d', // 主色 - 温暖橙色
+                            600: '#f48d12',
+                            700: '#f37907',
+                            800: '#f16501',
+                            900: '#ee4600',
+                        },
+                        accent: {
+                            50: '#e8f5e9',
+                            100: '#c8e6c9',
+                            200: '#a5d6a7',
+                            300: '#81c784',
+                            400: '#66bb6a',
+                            500: '#4caf50', // 强调色 - 清新绿色
+                            600: '#43a047',
+                            700: '#388e3c',
+                            800: '#2e7d32',
+                            900: '#1b5e20',
+                        },
+                        secondary: {
+                            50: '#e3f2fd',
+                            100: '#bbdefb',
+                            200: '#90caf9',
+                            300: '#64b5f6',
+                            400: '#42a5f5',
+                            500: '#2196f3', // 次要色 - 活力蓝色
+                            600: '#1e88e5',
+                            700: '#1976d2',
+                            800: '#1565c0',
+                            900: '#0d47a1',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans SC"', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-soft': 'bounceSoft 0.5s ease-in-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        bounceSoft: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #fef3e2 0%, #fff9f0 100%);
+            min-height: 100vh;
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #f5a11d;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #f48d12;
+        }
+
+        /* 卡片悬停效果 */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(245, 161, 29, 0.15);
+        }
+
+        /* 按钮点击效果 */
+        .btn-press {
+            transition: all 0.15s ease;
+        }
+
+        .btn-press:active {
+            transform: scale(0.95);
+        }
+
+        /* 输入框焦点效果 */
+        .input-focus {
+            transition: all 0.3s ease;
+        }
+
+        .input-focus:focus {
+            border-color: #f5a11d;
+            box-shadow: 0 0 0 3px rgba(245, 161, 29, 0.1);
+        }
+
+        /* 加载动画 */
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #f5a11d;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Toast 提示动画 */
+        .toast-enter {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 设计系统展示 -->
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- 标题 -->
+        <div class="text-center mb-12 animate-fade-in">
+            <h1 class="text-4xl font-bold text-gray-800 mb-3">🎨 家校任务助手设计系统</h1>
+            <p class="text-gray-600 text-lg">温馨活泼的家庭教育风格</p>
+        </div>
+
+        <!-- 配色方案 -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8 card-hover animate-slide-up">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-palette text-primary-500 mr-3"></i>
+                配色方案
+            </h2>
+
+            <!-- 主色调 -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">主色调 - 温暖橙色</h3>
+                <div class="grid grid-cols-5 gap-3">
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-primary-50 shadow-sm"></div>
+                        <p class="text-sm text-gray-600 mt-2">50</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-primary-100 shadow-sm"></div>
+                        <p class="text-sm text-gray-600 mt-2">100</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-primary-300 shadow-sm"></div>
+                        <p class="text-sm text-gray-600 mt-2">300</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-primary-500 shadow-md"></div>
+                        <p class="text-sm text-gray-600 mt-2 font-semibold">500</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-primary-700 shadow-md"></div>
+                        <p class="text-sm text-gray-600 mt-2">700</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 强调色 -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">强调色 - 清新绿色</h3>
+                <div class="grid grid-cols-5 gap-3">
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-accent-50 shadow-sm"></div>
+                        <p class="text-sm text-gray-600 mt-2">50</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-accent-200 shadow-sm"></div>
+                        <p class="text-sm text-gray-600 mt-2">200</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-accent-400 shadow-sm"></div>
+                        <p class="text-sm text-gray-600 mt-2">400</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-accent-500 shadow-md"></div>
+                        <p class="text-sm text-gray-600 mt-2 font-semibold">500</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-accent-700 shadow-md"></div>
+                        <p class="text-sm text-gray-600 mt-2">700</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 次要色 -->
+            <div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">次要色 - 活力蓝色</h3>
+                <div class="grid grid-cols-5 gap-3">
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-secondary-50 shadow-sm"></div>
+                        <p class="text-sm text-gray-600 mt-2">50</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-secondary-200 shadow-sm"></div>
+                        <p class="text-sm text-gray-600 mt-2">200</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-secondary-400 shadow-sm"></div>
+                        <p class="text-sm text-gray-600 mt-2">400</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-secondary-500 shadow-md"></div>
+                        <p class="text-sm text-gray-600 mt-2 font-semibold">500</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="h-20 rounded-lg bg-secondary-700 shadow-md"></div>
+                        <p class="text-sm text-gray-600 mt-2">700</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 按钮样式 -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8 card-hover">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-hand-pointer text-primary-500 mr-3"></i>
+                按钮样式
+            </h2>
+
+            <div class="space-y-4">
+                <!-- 主按钮 -->
+                <div class="flex flex-wrap gap-4">
+                    <button class="btn-press px-6 py-3 bg-primary-500 text-white rounded-xl font-semibold shadow-lg hover:bg-primary-600 hover:shadow-xl transition-all">
+                        <i class="fas fa-magic mr-2"></i>AI 解析
+                    </button>
+                    <button class="btn-press px-6 py-3 bg-accent-500 text-white rounded-xl font-semibold shadow-lg hover:bg-accent-600 hover:shadow-xl transition-all">
+                        <i class="fas fa-check mr-2"></i>完成任务
+                    </button>
+                    <button class="btn-press px-6 py-3 bg-secondary-500 text-white rounded-xl font-semibold shadow-lg hover:bg-secondary-600 hover:shadow-xl transition-all">
+                        <i class="fas fa-plus mr-2"></i>添加学生
+                    </button>
+                </div>
+
+                <!-- 次要按钮 -->
+                <div class="flex flex-wrap gap-4">
+                    <button class="btn-press px-6 py-3 bg-white text-primary-500 border-2 border-primary-500 rounded-xl font-semibold hover:bg-primary-50 transition-all">
+                        取消
+                    </button>
+                    <button class="btn-press px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+                        返回
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 卡片样式 -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8 card-hover">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-square text-primary-500 mr-3"></i>
+                卡片样式
+            </h2>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- 任务卡片 -->
+                <div class="bg-gradient-to-br from-primary-50 to-white border-l-4 border-primary-500 rounded-xl p-6 shadow-md card-hover">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="font-bold text-gray-800 text-lg mb-2">数学作业</h3>
+                            <p class="text-gray-600 text-sm mb-3">完成练习册第10-12页</p>
+                            <div class="flex items-center text-sm text-gray-500">
+                                <i class="far fa-calendar-alt mr-2"></i>
+                                <span>明天截止</span>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">进行中</span>
+                    </div>
+                </div>
+
+                <!-- 已完成任务 -->
+                <div class="bg-gradient-to-br from-accent-50 to-white border-l-4 border-accent-500 rounded-xl p-6 shadow-md card-hover">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="font-bold text-gray-800 text-lg mb-2 line-through opacity-60">语文背诵</h3>
+                            <p class="text-gray-600 text-sm mb-3">背诵课文第三段</p>
+                            <div class="flex items-center text-sm text-accent-600">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <span>已完成</span>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 bg-accent-100 text-accent-700 rounded-full text-xs font-semibold">✓ 完成</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 表单元素 -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8 card-hover">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-edit text-primary-500 mr-3"></i>
+                表单元素
+            </h2>
+
+            <div class="space-y-6 max-w-xl">
+                <!-- 输入框 -->
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">输入框</label>
+                    <input type="text" placeholder="请输入内容..." class="input-focus w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none">
+                </div>
+
+                <!-- 下拉选择 -->
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">下拉选择</label>
+                    <select class="input-focus w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none bg-white">
+                        <option>请选择学生...</option>
+                        <option>张三 - 三年级</option>
+                        <option>李四 - 四年级</option>
+                    </select>
+                </div>
+
+                <!-- 文本域 -->
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">文本域</label>
+                    <textarea placeholder="粘贴老师消息..." rows="4" class="input-focus w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none resize-none"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- 动效展示 -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 card-hover">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-wand-magic-sparkles text-primary-500 mr-3"></i>
+                动效展示
+            </h2>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="text-center p-6 bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl animate-fade-in">
+                    <div class="text-4xl mb-3">✨</div>
+                    <h3 class="font-bold text-gray-800 mb-2">淡入动画</h3>
+                    <p class="text-sm text-gray-600">fadeIn 0.3s</p>
+                </div>
+
+                <div class="text-center p-6 bg-gradient-to-br from-accent-50 to-accent-100 rounded-xl animate-slide-up">
+                    <div class="text-4xl mb-3">🚀</div>
+                    <h3 class="font-bold text-gray-800 mb-2">上滑动画</h3>
+                    <p class="text-sm text-gray-600">slideUp 0.3s</p>
+                </div>
+
+                <div class="text-center p-6 bg-gradient-to-br from-secondary-50 to-secondary-100 rounded-xl animate-bounce-soft">
+                    <div class="text-4xl mb-3">⭐</div>
+                    <h3 class="font-bold text-gray-800 mb-2">弹跳动画</h3>
+                    <p class="text-sm text-gray-600">bounce 0.5s</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
