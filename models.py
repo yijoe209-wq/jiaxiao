@@ -2,12 +2,14 @@
 数据库模型定义
 包含家庭、学生、任务、待确认任务四张表
 """
-from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey, Index, Numeric, Integer, create_engine
+from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey, Index, Numeric, Integer, create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.pool import QueuePool
 from datetime import datetime
 import uuid
 import json
+import os
 
 Base = declarative_base()
 
@@ -176,11 +178,32 @@ class Database:
     """数据库管理类"""
 
     def __init__(self, database_url='sqlite:///jiaxiao.db'):
-        self.engine = create_engine(
-            database_url,
-            echo=False,  # 设为 True 可查看 SQL 日志
-            pool_pre_ping=True,  # 自动重连
-        )
+        # SQLite 需要特殊配置
+        if database_url.startswith('sqlite:///'):
+            # 提取数据库文件路径
+            db_path = database_url.replace('sqlite:///', '')
+
+            # SQLite 连接配置
+            engine_kwargs = {
+                'echo': False,
+                'pool_pre_ping': True,
+                'poolclass': QueuePool,
+                'pool_size': 5,
+                'max_overflow': 10,
+                'connect_args': {
+                    'check_same_thread': False,  # 允许多线程访问
+                    'timeout': 30,  # 超时时间（秒）
+                    'isolation_level': None,  # 自动提交模式
+                }
+            }
+        else:
+            # PostgreSQL 等其他数据库
+            engine_kwargs = {
+                'echo': False,
+                'pool_pre_ping': True,
+            }
+
+        self.engine = create_engine(database_url, **engine_kwargs)
         self.SessionLocal = sessionmaker(
             autocommit=False,
             autoflush=False,
@@ -190,6 +213,14 @@ class Database:
     def create_tables(self):
         """创建所有表"""
         Base.metadata.create_all(bind=self.engine)
+
+        # 启用 WAL 模式以提高并发性能
+        if self.engine.dialect.name == 'sqlite':
+            with self.engine.connect() as conn:
+                conn.execute(text('PRAGMA journal_mode=WAL'))
+                conn.execute(text('PRAGMA synchronous=NORMAL'))
+                conn.commit()
+
         print("✅ 数据库表创建成功")
 
     def drop_tables(self):
@@ -203,7 +234,10 @@ class Database:
 
 
 # 全局数据库实例
-db = Database()
+# 注意：默认使用 jiaxiao_dev.db 以避免与生产环境冲突
+import os
+default_db = 'sqlite:///jiaxiao_dev.db' if os.getenv('ENV') == 'development' else 'sqlite:///jiaxiao.db'
+db = Database(default_db)
 
 
 def init_db(database_url=None):
@@ -211,5 +245,8 @@ def init_db(database_url=None):
     global db
     if database_url:
         db = Database(database_url)
-    db.create_tables()
+        # 重新创建表
+        db.create_tables()
+    elif not db.engine:
+        db.create_tables()
     return db

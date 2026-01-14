@@ -7,6 +7,12 @@
     <meta name="x5-orientation" content="portrait">
     <meta name="x5-fullscreen" content="true">
     <meta name="x5-page-mode" content="app">
+
+    <!-- Google Fonts: Noto Sans SC + Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
     <style>
         * {
             margin: 0;
@@ -15,7 +21,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Noto Sans SC', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: #f5f7fa;
             padding: 10px;
             padding-bottom: 80px;
@@ -249,13 +255,32 @@
         .btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);  /* 使用新的主色 */
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;  /* 更大的圆角 */
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
         }
 
         .btn:disabled {
@@ -299,8 +324,14 @@
             <div id="taskList">加载中...</div>
         </div>
 
-        <!-- 选择学生 -->
-        <div class="card">
+        <!-- 学生信息（已自动选定） -->
+        <div class="card" id="studentInfoCard" style="display: none;">
+            <h2>👤 学生</h2>
+            <div id="selectedStudentInfo"></div>
+        </div>
+
+        <!-- 选择学生（仅在没有预选时显示） -->
+        <div class="card" id="studentSelectCard" style="display: none;">
             <h2>👤 选择学生</h2>
             <div class="student-list" id="studentList">
                 <div class="empty">加载中...</div>
@@ -312,7 +343,9 @@
 
     <script>
         const API_BASE = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
-        const pendingId = new URLSearchParams(window.location.search).get('pending_id');
+        const urlParams = new URLSearchParams(window.location.search);
+        const pendingId = urlParams.get('pending_id');
+        const preselectedStudentId = urlParams.get('student_id');  // 从URL获取已选的学生ID
         let taskData = null;
         let selectedStudent = null;
         let students = [];
@@ -418,8 +451,10 @@
                                             <option value="音乐">音乐</option>
                                             <option value="美术">美术</option>
                                         </select>
-                                        <input type="text" placeholder="或输入截止时间（如：明天、周五）"
-                                               onchange="addTag(${index}, 'deadline', this.value); this.value='';">
+                                        <input type="date"
+                                               placeholder="选择截止日期"
+                                               onchange="formatAndAddDeadline(${index}, this.value); this.value='';"
+                                               style="min-width: 140px;">
                                         <button class="btn-small" onclick="toggleEdit(${index})">编辑内容</button>
                                     </div>
                                 </div>
@@ -428,12 +463,50 @@
                     `;
                 });
             } else {
+                // 单条任务也要支持编辑和标签
+                const task = taskData.task || taskData;
+                const tags = [];
+                if (task.subject) tags.push({ type: 'subject', text: task.subject, key: 'subject' });
+                if (task.deadline) tags.push({ type: 'deadline', text: task.deadline, key: 'deadline' });
+
                 html += `
-                    <div class="task-item">
+                    <div class="task-item" data-index="0">
                         <div class="task-header">
                             <div class="task-number">1</div>
                             <div class="task-content">
-                                <div class="task-desc">${taskData.description || taskData.raw_text || '无文本内容'}</div>
+                                <div class="task-desc" id="desc-0">${task.description || task.raw_text || '无文本内容'}</div>
+
+                                <div class="task-tags" id="tags-0">
+                                    ${tags.map(tag => `
+                                        <span class="tag ${tag.type}">
+                                            ${tag.text}
+                                            <span class="tag-remove" onclick="removeTag(0, '${tag.key}')">×</span>
+                                        </span>
+                                    `).join('')}
+                                </div>
+
+                                <div class="tag-input">
+                                    <select class="tag-select" onchange="addTag(0, 'subject', this.value); this.value='';">
+                                        <option value="">选择科目...</option>
+                                        <option value="语文">语文</option>
+                                        <option value="数学">数学</option>
+                                        <option value="英语">英语</option>
+                                        <option value="物理">物理</option>
+                                        <option value="化学">化学</option>
+                                        <option value="生物">生物</option>
+                                        <option value="历史">历史</option>
+                                        <option value="地理">地理</option>
+                                        <option value="政治">政治</option>
+                                        <option value="体育">体育</option>
+                                        <option value="音乐">音乐</option>
+                                        <option value="美术">美术</option>
+                                    </select>
+                                    <input type="date"
+                                           placeholder="选择截止日期"
+                                           onchange="formatAndAddDeadline(0, this.value); this.value='';"
+                                           style="min-width: 140px;">
+                                    <button class="btn-small" onclick="toggleEdit(0)">编辑内容</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -471,7 +544,12 @@
             }
 
             if (taskData.tasks) {
+                // 多条任务
                 taskData.tasks[index].description = newDesc;
+            } else {
+                // 单条任务
+                const task = taskData.task || taskData;
+                task.description = newDesc;
             }
 
             renderTasks();
@@ -482,8 +560,16 @@
             if (!tagValue || !tagValue.trim()) return;
 
             if (taskData.tasks) {
+                // 多条任务
                 const task = taskData.tasks[index];
-
+                if (tagType === 'subject') {
+                    task.subject = tagValue;
+                } else if (tagType === 'deadline') {
+                    task.deadline = tagValue;
+                }
+            } else {
+                // 单条任务
+                const task = taskData.task || taskData;
                 if (tagType === 'subject') {
                     task.subject = tagValue;
                 } else if (tagType === 'deadline') {
@@ -494,11 +580,34 @@
             renderTasks();
         }
 
+        // 格式化日期并添加为截止时间标签
+        function formatAndAddDeadline(index, dateValue) {
+            if (!dateValue) return;
+
+            // 将 YYYY-MM-DD 格式化为 "M月D日 周X" 格式
+            const date = new Date(dateValue);
+            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const weekday = weekdays[date.getDay()];
+
+            const formattedDate = `${month}月${day}日 ${weekday}`;
+            addTag(index, 'deadline', formattedDate);
+        }
+
         // 删除标签
         function removeTag(index, tagKey) {
             if (taskData.tasks) {
+                // 多条任务
                 const task = taskData.tasks[index];
-
+                if (tagKey === 'subject') {
+                    delete task.subject;
+                } else if (tagKey === 'deadline') {
+                    delete task.deadline;
+                }
+            } else {
+                // 单条任务
+                const task = taskData.task || taskData;
                 if (tagKey === 'subject') {
                     delete task.subject;
                 } else if (tagKey === 'deadline') {
@@ -509,7 +618,7 @@
             renderTasks();
         }
 
-        // 加载学生列表
+        // 加载学生列表并自动选中
         async function loadStudents() {
             try {
                 const response = await fetch(API_BASE + '/api/students', {
@@ -524,28 +633,59 @@
                 }
 
                 const data = await response.json();
-
                 students = data.students || [];
 
                 if (students.length > 0) {
+                    // 如果有预选的学生ID，自动选中并显示信息
+                    if (preselectedStudentId) {
+                        const preselectedStudent = students.find(s => s.student_id === preselectedStudentId);
+                        if (preselectedStudent) {
+                            selectedStudent = preselectedStudent.student_id;
+                            displaySelectedStudent(preselectedStudent);
+                            document.getElementById('confirmBtn').disabled = false;
+                            return;
+                        }
+                    }
+
+                    // 如果没有预选或找不到学生，显示学生选择列表
+                    document.getElementById('studentInfoCard').style.display = 'none';
+                    document.getElementById('studentSelectCard').style.display = 'block';
                     document.getElementById('studentList').innerHTML = students.map(s => `
-                        <div class="student-item" onclick="selectStudent('${s.id}', this)">
+                        <div class="student-item" onclick="selectStudent('${s.student_id}', this)">
                             <div class="student-name">${s.name}</div>
-                            <div class="student-grade">${s.grade || '未设置年级'} ${s.class_name || ''}</div>
+                            <div class="student-grade">${s.grade || '未设置年级'}</div>
                         </div>
                     `).join('');
                 } else {
+                    document.getElementById('studentInfoCard').style.display = 'none';
+                    document.getElementById('studentSelectCard').style.display = 'block';
                     document.getElementById('studentList').innerHTML = `
-                        <div class="empty">暂无学生，<a href="/students">去添加</a></div>
+                        <div class="empty">暂无学生，<a href="/">去添加</a></div>
                     `;
                 }
             } catch (error) {
                 console.error('加载学生失败:', error);
+                document.getElementById('studentInfoCard').style.display = 'none';
+                document.getElementById('studentSelectCard').style.display = 'block';
                 document.getElementById('studentList').innerHTML = '<div class="empty">加载失败</div>';
             }
         }
 
-        // 选择学生
+        // 显示已选学生信息
+        function displaySelectedStudent(student) {
+            const card = document.getElementById('studentInfoCard');
+            const info = document.getElementById('selectedStudentInfo');
+
+            info.innerHTML = `
+                <div class="student-item active" style="cursor: default;">
+                    <div class="student-name">${student.name}</div>
+                    <div class="student-grade">${student.grade || '未设置年级'}</div>
+                </div>
+            `;
+            card.style.display = 'block';
+        }
+
+        // 手动选择学生（仅在没有预选时使用）
         function selectStudent(id, element) {
             selectedStudent = id;
 
@@ -582,8 +722,18 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert('✅ 任务创建成功！');
-                    window.location.href = '/tasks';
+                    // 提取任务ID列表
+                    let taskIds = [];
+                    if (result.tasks) {
+                        // 多条任务
+                        taskIds = result.tasks;
+                    } else if (result.task_id) {
+                        // 单条任务
+                        taskIds = [result.task_id];
+                    }
+
+                    // 显示成功提示
+                    showSuccessMessage(taskIds);
                 } else {
                     alert('确认失败：' + (result.error || '未知错误'));
                     btn.disabled = false;
@@ -595,6 +745,74 @@
                 btn.disabled = false;
                 btn.textContent = '✅ 确认创建任务';
             }
+        }
+
+        // 显示成功提示并跳转
+        function showSuccessMessage(taskIds) {
+            // 创建成功提示卡片
+            const successCard = document.createElement('div');
+            successCard.id = 'successCard';
+            successCard.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 40px;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                text-align: center;
+                z-index: 1000;
+                animation: slideUp 0.5s ease-out;
+                min-width: 320px;
+            `;
+
+            const taskCount = taskIds.length;
+            successCard.innerHTML = `
+                <div style="font-size: 64px; margin-bottom: 20px;">🎉</div>
+                <h2 style="color: #10b981; margin-bottom: 10px; font-size: 24px;">任务创建成功！</h2>
+                <p style="color: #666; margin-bottom: 30px;">成功创建 ${taskCount} 个任务</p>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-direction: column;">
+                    <button onclick="window.location.href='/my-tasks'"
+                            style="padding: 12px 30px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);">
+                        📋 查看任务
+                    </button>
+                    <button onclick="window.location.href='/'"
+                            style="padding: 12px 30px; background: #e5e7eb; color: #374151; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; transition: all 0.3s;">
+                        ➕ 继续添加
+                    </button>
+                </div>
+                <p style="color: #9ca3af; font-size: 14px; margin-top: 20px;">3秒后自动跳转到任务中心...</p>
+            `;
+
+            // 遮罩层
+            const overlay = document.createElement('div');
+            overlay.id = 'successOverlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+            `;
+
+            document.body.appendChild(overlay);
+            document.body.appendChild(successCard);
+
+            // 3秒后自动跳转
+            let countdown = 3;
+            const countdownEl = successCard.querySelector('p:last-child');
+            const timer = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    countdownEl.textContent = `${countdown}秒后自动跳转到任务中心...`;
+                } else {
+                    clearInterval(timer);
+                    window.location.href = '/my-tasks';
+                }
+            }, 1000);
         }
 
         // 初始化

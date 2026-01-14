@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本地测试页面 - 家校任务助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0051D5;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        input, select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        input[type="text"] {
+            width: 200px;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 80px;
+            margin-bottom: 10px;
+        }
+        .result {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .info {
+            color: #2196F3;
+        }
+        .student-list, .task-list {
+            margin-top: 10px;
+        }
+        .student-item, .task-item {
+            background: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .status.pending {
+            background: #FF9800;
+            color: white;
+        }
+        .status.completed {
+            background: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 本地测试页面 - 家校任务助手</h1>
+
+        <div class="section">
+            <h2>1️⃣ 用户注册</h2>
+            <input type="text" id="regName" placeholder="家长姓名" value="测试用户">
+            <input type="text" id="regEmail" placeholder="邮箱" value="test@example.com">
+            <input type="password" id="regPassword" placeholder="密码（至少6位）" value="test123">
+            <button onclick="testRegister()">注册</button>
+            <div id="regResult" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>2️⃣ 添加学生</h2>
+            <input type="text" id="studentName" placeholder="学生姓名" value="张三">
+            <select id="studentGrade">
+                <option value="一年级">一年级</option>
+                <option value="二年级">二年级</option>
+                <option value="三年级">三年级</option>
+                <option value="四年级">四年级</option>
+                <option value="五年级">五年级</option>
+                <option value="六年级">六年级</option>
+            </select>
+            <button onclick="testAddStudent()">添加学生</button>
+            <div id="studentResult" class="result"></div>
+            <div id="studentList" class="student-list"></div>
+        </div>
+
+        <div class="section">
+            <h2>3️⃣ 创建任务（AI解析）</h2>
+            <textarea id="taskMessage" placeholder="输入作业内容，例如：数学作业：练习册第10-12页，明天交">数学作业：练习册第10-12页，明天交</textarea>
+            <select id="taskStudent">
+                <option value="">选择学生</option>
+            </select>
+            <button onclick="testCreateTask()">AI解析并创建任务</button>
+            <div id="taskResult" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>4️⃣ 查看任务列表</h2>
+            <button onclick="testGetTasks()">刷新任务列表</button>
+            <div id="taskList" class="task-list"></div>
+        </div>
+
+        <div class="section">
+            <h2>5️⃣ 快速操作</h2>
+            <div class="button-group">
+                <button onclick="checkLogin()">检查登录状态</button>
+                <button onclick="getStudents()">刷新学生列表</button>
+                <button onclick="clearResults()">清空结果显示</button>
+            </div>
+            <div id="quickResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5001';
+        let cookies = '';
+
+        // 保存cookies
+        function saveCookies(responseHeaders) {
+            const setCookieHeaders = responseHeaders.filter(h => h.includes('Set-Cookie'));
+            cookies = setCookieHeaders.map(h => {
+                const match = h.match(/([^=]+)=([^;]+)/);
+                return match ? `${match[1]}=${match[2]}` : '';
+            }).filter(c => c).join('; ');
+        }
+
+        // 获取fetch headers
+        function getHeaders() {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            if (cookies) {
+                headers['Cookie'] = cookies;
+            }
+            return headers;
+        }
+
+        // 测试注册
+        async function testRegister() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            const result = document.getElementById('regResult');
+            result.className = 'result info';
+            result.textContent = '注册中...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/register`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        parent_name: name,
+                        email: email,
+                        password: password
+                    })
+                });
+
+                // 保存cookies
+                saveCookies([...response.headers]);
+
+                const data = await response.json();
+
+                if (data.success) {
+                    result.className = 'result success';
+                    result.textContent = `✅ 注册成功！\nFamily ID: ${data.family_id}\n家长姓名: ${data.parent_name}`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ 注册失败: ${data.error}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 注册失败: ${error.message}`;
+            }
+        }
+
+        // 测试添加学生
+        async function testAddStudent() {
+            const name = document.getElementById('studentName').value;
+            const grade = document.getElementById('studentGrade').value;
+
+            const result = document.getElementById('studentResult');
+            result.className = 'result info';
+            result.textContent = '添加中...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/students`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        name: name,
+                        grade: grade
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    result.className = 'result success';
+                    result.textContent = `✅ 添加成功！\nStudent ID: ${data.student_id}`;
+                    getStudents(); // 刷新学生列表
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ 添加失败: ${data.error}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 添加失败: ${error.message}`;
+            }
+        }
+
+        // 测试创建任务
+        async function testCreateTask() {
+            const message = document.getElementById('taskMessage').value;
+            const studentId = document.getElementById('taskStudent').value;
+
+            if (!studentId) {
+                alert('请先选择学生');
+                return;
+            }
+
+            const result = document.getElementById('taskResult');
+            result.className = 'result info';
+            result.textContent = 'AI 解析中...';
+
+            try {
+                // 第一步：AI解析
+                const simulateResponse = await fetch(`${API_BASE}/api/simulate`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ message: message })
+                });
+
+                const simulateData = await simulateResponse.json();
+
+                if (!simulateData.success) {
+                    throw new Error(simulateData.error || 'AI解析失败');
+                }
+
+                result.className = 'result info';
+                result.textContent = `✅ AI解析成功\nPending ID: ${simulateData.pending_id}\n正在创建任务...`;
+
+                // 第二步：确认创建
+                const confirmResponse = await fetch(`${API_BASE}/api/confirm`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        pending_id: simulateData.pending_id,
+                        student_id: studentId
+                    })
+                });
+
+                const confirmData = await confirmResponse.json();
+
+                if (confirmData.success) {
+                    result.className = 'result success';
+                    result.textContent = `✅ 任务创建成功！\nTask ID: ${confirmData.task_id}\n\n可以去查看任务列表了`;
+                    testGetTasks(); // 刷新任务列表
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ 创建失败: ${confirmData.error}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ 创建失败: ${error.message}`;
+            }
+        }
+
+        // 获取学生列表
+        async function getStudents() {
+            try {
+                const response = await fetch(`${API_BASE}/api/students`, {
+                    headers: getHeaders()
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const list = document.getElementById('studentList');
+                    const select = document.getElementById('taskStudent');
+
+                    // 显示学生列表
+                    list.innerHTML = data.students.map(s =>
+                        `<div class="student-item">
+                            📚 ${s.name}（${s.grade}）
+                            <small>ID: ${s.student_id}</small>
+                        </div>`
+                    ).join('') || '<div class="info">还没有学生</div>';
+
+                    // 更新下拉框
+                    select.innerHTML = '<option value="">选择学生</option>' +
+                        data.students.map(s =>
+                            `<option value="${s.student_id}">${s.name}（${s.grade}）</option>`
+                        ).join('');
+                }
+            } catch (error) {
+                console.error('获取学生列表失败:', error);
+            }
+        }
+
+        // 获取任务列表
+        async function testGetTasks() {
+            const result = document.getElementById('taskList');
+            result.className = 'result info';
+            result.textContent = '加载中...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/students`, {
+                    headers: getHeaders()
+                });
+
+                const studentsData = await response.json();
+
+                if (!studentsData.success || !studentsData.students.length) {
+                    result.className = 'result info';
+                    result.textContent = '还没有学生或任务';
+                    return;
+                }
+
+                // 获取每个学生的任务
+                let allTasks = [];
+                for (const student of studentsData.students) {
+                    const taskResponse = await fetch(`${API_BASE}/api/tasks/${student.student_id}`, {
+                        headers: getHeaders()
+                    });
+
+                    const taskData = await taskResponse.json();
+                    if (taskData.success) {
+                        allTasks = allTasks.concat(taskData.tasks.map(t => ({
+                            ...t,
+                            student_name: student.name,
+                            student_grade: student.grade
+                        })));
+                    }
+                }
+
+                // 显示任务
+                result.innerHTML = allTasks.length ? allTasks.map(t => `
+                    <div class="task-item">
+                        <strong>${t.subject || '未分类'}</strong>: ${t.description}
+                        <br><small>学生: ${t.student_name} | 截止: ${t.deadline || '无'}</small>
+                        <span class="status ${t.is_completed ? 'completed' : 'pending'}">
+                            ${t.is_completed ? '已完成' : '待完成'}
+                        </span>
+                        ${!t.is_completed ? `<button onclick="completeTask('${t.task_id}')" style="margin-left:10px;padding:5px 10px;font-size:12px;">标记完成</button>` : ''}
+                    </div>
+                `).join('') : '<div class="info">还没有任务</div>';
+
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `加载失败: ${error.message}`;
+            }
+        }
+
+        // 标记任务完成
+        async function completeTask(taskId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/tasks/${taskId}/complete`, {
+                    method: 'POST',
+                    headers: getHeaders()
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    testGetTasks(); // 刷新列表
+                } else {
+                    alert('操作失败: ' + data.error);
+                }
+            } catch (error) {
+                alert('操作失败: ' + error.message);
+            }
+        }
+
+        // 检查登录状态
+        async function checkLogin() {
+            const result = document.getElementById('quickResult');
+            result.className = 'result info';
+            result.textContent = '检查中...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/check`, {
+                    headers: getHeaders()
+                });
+
+                const data = await response.json();
+
+                if (data.loggedIn) {
+                    result.className = 'result success';
+                    result.textContent = `✅ 已登录\nEmail: ${data.user.email}\n家长: ${data.user.parent_name}`;
+                    getStudents(); // 同时加载学生列表
+                } else {
+                    result.className = 'result error';
+                    result.textContent = '❌ 未登录，请先注册';
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `检查失败: ${error.message}`;
+            }
+        }
+
+        // 清空结果显示
+        function clearResults() {
+            document.getElementById('regResult').textContent = '';
+            document.getElementById('studentResult').textContent = '';
+            document.getElementById('taskResult').textContent = '';
+            document.getElementById('quickResult').textContent = '';
+        }
+
+        // 页面加载时检查登录状态
+        window.addEventListener('DOMContentLoaded', () => {
+            checkLogin();
+        });
+    </script>
+</body>
+</html>

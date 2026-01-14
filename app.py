@@ -31,7 +31,11 @@ init_db(Config.DATABASE_URL)
 # 创建上传目录（使用持久化存储）
 # Zeabur: /app/data 映射到持久化存储
 # 本地开发: 使用 ./data/uploads
-UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/app/data/uploads')
+if os.getenv('ENV') == 'development':
+    UPLOAD_FOLDER = './data/uploads'
+else:
+    UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/app/data/uploads')
+
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -1339,6 +1343,64 @@ def complete_task(task_id):
 
     except Exception as e:
         logger.error(f"标记任务完成失败: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        session.close()
+
+
+@app.route('/api/tasks/<task_id>', methods=['PUT'])
+def update_task(task_id):
+    """更新任务信息"""
+    family_id = get_current_family_id()
+
+    if not family_id:
+        return jsonify({'error': '未登录'}), 401
+
+    data = request.json
+    session = db.get_session()
+    try:
+        task = session.query(Task).filter_by(task_id=task_id).first()
+
+        if not task:
+            return jsonify({'error': '任务不存在'}), 404
+
+        # 验证任务所属学生是否属于当前家庭
+        student = session.query(Student).filter_by(
+            student_id=task.student_id
+        ).first()
+
+        if not student or student.family_id != family_id:
+            return jsonify({'error': '无权操作此任务'}), 403
+
+        # 更新字段
+        if 'description' in data:
+            task.description = data['description']
+
+        if 'subject' in data:
+            task.subject = data['subject']
+
+        if 'deadline' in data:
+            if data['deadline']:
+                # 解析日期字符串
+                from datetime import datetime
+                task.deadline = datetime.strptime(data['deadline'], '%Y-%m-%d')
+            else:
+                task.deadline = None
+
+        task.updated_at = datetime.now()
+        session.commit()
+
+        logger.log_message('task_updated', {'task_id': task_id})
+
+        return jsonify({
+            'success': True,
+            'message': '任务已更新',
+            'task': task.to_dict()
+        })
+
+    except Exception as e:
+        session.rollback()
+        logger.error(f"更新任务失败: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
     finally:
         session.close()

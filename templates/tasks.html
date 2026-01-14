@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>任务管理 - 家校助手</title>
+
+    <!-- Google Fonts: Noto Sans SC + Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
     <style>
         * {
             margin: 0;
@@ -12,7 +18,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Noto Sans SC', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: #f5f7fa;
             padding: 20px;
         }
@@ -361,18 +367,35 @@
         let currentFilter = 'all';
         let confirmedTasksData = [];
 
-        // 学生数据
-        const students = [
-            { id: '845d9d68-4c15-4a97-869e-bd0af18dbc67', name: '渲宇', grade: '七年级' },
-            { id: '0f3f8050-ce01-4397-809a-e4101dfb78e0', name: '梓萌', grade: '二年级' }
-        ];
+        // 学生数据（动态加载）
+        let students = [];
 
         // 页面加载
-        window.onload = function() {
+        window.onload = async function() {
+            // 先加载学生数据
+            await loadStudents();
+            // 然后加载任务
             loadPendingTasks();
             // 延迟加载已确认任务，避免阻塞
             setTimeout(loadConfirmedTasks, 100);
         };
+
+        // 加载学生列表
+        async function loadStudents() {
+            try {
+                const response = await fetch(`${API_BASE}/api/students`);
+                const data = await response.json();
+                if (data.success) {
+                    students = data.students.map(s => ({
+                        id: s.student_id,
+                        name: s.name,
+                        grade: s.grade
+                    }));
+                }
+            } catch (error) {
+                console.error('加载学生失败:', error);
+            }
+        }
 
         // 加载待确认任务
         async function loadPendingTasks() {
@@ -519,23 +542,31 @@
             }
         }
 
-        // 加载已确认任务
+        // 加载已确认任务（并行请求优化）
         async function loadConfirmedTasks() {
             try {
-                // 获取所有学生的任务
+                // 并行获取所有学生的任务
                 const allTasks = [];
 
-                for (const student of students) {
-                    const response = await fetch(`${API_BASE}/api/tasks/${student.id}`);
-                    const data = await response.json();
+                // 使用 Promise.all 并行请求
+                const taskPromises = students.map(async (student) => {
+                    try {
+                        const response = await fetch(`${API_BASE}/api/tasks/${student.id}`);
+                        const data = await response.json();
 
-                    data.tasks.forEach(task => {
-                        task.student_name = student.name;
-                        task.student_grade = student.grade;
-                    });
+                        return data.tasks.map(task => ({
+                            ...task,
+                            student_name: student.name,
+                            student_grade: student.grade
+                        }));
+                    } catch (error) {
+                        console.error(`加载学生 ${student.name} 的任务失败:`, error);
+                        return [];
+                    }
+                });
 
-                    allTasks.push(...data.tasks);
-                }
+                const results = await Promise.all(taskPromises);
+                results.forEach(tasks => allTasks.push(...tasks));
 
                 confirmedTasksData = allTasks;
                 renderConfirmedTasks();

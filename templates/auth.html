@@ -6,6 +6,12 @@
     <title>登录/注册 - 作业助手</title>
     <meta name="x5-orientation" content="portrait">
     <meta name="x5-fullscreen" content="true">
+
+    <!-- Google Fonts: Noto Sans SC + Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
     <style>
         * {
             margin: 0;
@@ -14,8 +20,8 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Noto Sans SC', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);  /* 新的主色 */
             padding: 20px;
             min-height: 100vh;
             display: flex;
@@ -100,29 +106,38 @@
 
         .form-group input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #3b82f6;  /* 使用新的主色 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);  /* 添加 focus ring */
         }
 
         .btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);  /* 新的主色 */
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;  /* 更大的圆角 */
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             margin-top: 10px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
         }
 
         .btn:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
         }
 
         .btn:active {
             transform: translateY(0);
+        }
+
+        .btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
         }
 
         .error {
