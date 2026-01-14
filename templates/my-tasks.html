@@ -268,20 +268,68 @@
         const API_BASE = window.location.protocol + '//' + window.location.hostname +
                         (window.location.port ? ':' + window.location.port : '');
 
-        // 学生数据
-        const students = [
-            { id: '845d9d68-4c15-4a97-869e-bd0af18dbc67', name: '渲宇', grade: '七年级' },
-            { id: '0f3f8050-ce01-4397-809a-e4101dfb78e0', name: '梓萌', grade: '二年级' }
-        ];
-
+        // 学生数据（动态加载）
+        let students = [];
         let allTasks = [];
         let currentQuickFilter = 'all';
 
         // 页面加载
         window.onload = function() {
-            initFilters();
-            loadTasks();
+            loadStudents();
         };
+
+        // 加载学生列表
+        async function loadStudents() {
+            try {
+                const response = await fetch(`${API_BASE}/api/students`);
+                const data = await response.json();
+
+                if (data.success) {
+                    students = data.students.map(s => ({
+                        id: s.student_id,
+                        name: s.name,
+                        grade: s.grade
+                    }));
+
+                    if (students.length === 0) {
+                        // 没有学生，显示提示
+                        document.getElementById('tasks-container').innerHTML = `
+                            <div class="text-center py-16">
+                                <div class="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-user-plus text-primary-500 text-3xl"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">还没有学生</h3>
+                                <p class="text-gray-600 mb-6">请先添加学生，然后创建任务</p>
+                                <a href="/" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl font-semibold hover:from-primary-600 hover:to-primary-700 transition-all shadow-md">
+                                    <i class="fas fa-plus mr-2"></i>添加学生
+                                </a>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    // 加载完学生后初始化筛选器和任务
+                    initFilters();
+                    loadTasks();
+                } else {
+                    throw new Error(data.error || '加载学生失败');
+                }
+            } catch (error) {
+                console.error('加载学生失败:', error);
+                document.getElementById('tasks-container').innerHTML = `
+                    <div class="text-center py-16">
+                        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-exclamation-triangle text-red-500 text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">加载失败</h3>
+                        <p class="text-gray-600 mb-6">${error.message}</p>
+                        <a href="/login" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl font-semibold hover:from-primary-600 hover:to-primary-700 transition-all shadow-md">
+                            <i class="fas fa-sign-in-alt mr-2"></i>重新登录
+                        </a>
+                    </div>
+                `;
+            }
+        }
 
         // 初始化筛选器
         function initFilters() {
