@@ -1,17 +1,30 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>确认任务 - 作业助手</title>
-    <meta name="x5-orientation" content="portrait">
-    <meta name="x5-fullscreen" content="true">
-    <meta name="x5-page-mode" content="app">
+    <title>确认任务 - 家校任务助手</title>
 
-    <!-- Google Fonts: Noto Sans SC + Inter -->
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans SC"', '"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
 
     <style>
         * {
@@ -21,686 +34,420 @@
         }
 
         body {
-            font-family: 'Noto Sans SC', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #f5f7fa;
-            padding: 10px;
-            padding-bottom: 80px;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .card {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-
-        .card h2 {
-            font-size: 16px;
-            margin-bottom: 12px;
-            color: #333;
-        }
-
-        .task-item {
-            padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .task-item:last-child {
-            border-bottom: none;
-        }
-
-        .task-header {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 8px;
-        }
-
-        .task-number {
-            width: 28px;
-            height: 28px;
-            background: #667eea;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: bold;
-            margin-right: 10px;
-            flex-shrink: 0;
-        }
-
-        .task-content {
-            flex: 1;
-        }
-
-        .task-desc {
-            font-size: 14px;
-            color: #333;
+            font-family: 'Noto Sans SC', 'Inter', sans-serif;
+            background: #fafafa;
+            color: #1a1a1a;
             line-height: 1.6;
-            margin-bottom: 8px;
         }
 
-        .task-desc-edit {
-            width: 100%;
-            padding: 8px;
-            border: 2px solid #667eea;
-            border-radius: 4px;
-            font-size: 14px;
-            font-family: inherit;
-            resize: vertical;
-            min-height: 60px;
-            box-sizing: border-box;
-        }
-
-        .task-tags {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-
-        .tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            background: #e9ecef;
-            color: #666;
-        }
-
-        .tag.subject {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .tag.deadline {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .tag-remove {
-            cursor: pointer;
-            font-weight: bold;
-            opacity: 0.6;
-        }
-
-        .tag-remove:hover {
-            opacity: 1;
-        }
-
-        .tag-input {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-
-        .tag-select {
-            padding: 6px 10px;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
-            font-size: 13px;
+        .task-card {
             background: white;
+            border: 1px solid #f0f0f0;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
         }
 
-        .tag-input input {
-            flex: 1;
-            min-width: 120px;
-            padding: 6px 10px;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
-            font-size: 13px;
-            box-sizing: border-box;
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            background: #667eea;
+        .btn-primary {
+            background: #1a1a1a;
             color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
             border: none;
-            border-radius: 4px;
-            font-size: 12px;
             cursor: pointer;
-        }
-
-        .btn-small:hover {
-            opacity: 0.9;
-        }
-
-        .btn-small.secondary {
-            background: #6c757d;
-        }
-
-        .images-preview {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .image-item {
-            position: relative;
+            transition: all 0.2s ease;
             width: 100%;
-            padding-bottom: 100%;
-            border-radius: 4px;
-            overflow: hidden;
-            background: #f0f0f0;
         }
 
-        .image-item img {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .btn-primary:hover {
+            background: #333;
+        }
+
+        .btn-primary:disabled {
+            background: #e5e5e5;
+            cursor: not-allowed;
+        }
+
+        .attachment-img {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            max-width: 300px;
+            height: auto;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
         }
 
-        .student-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 8px;
+        .attachment-img:hover {
+            transform: scale(1.02);
         }
 
-        .student-item {
+        .raw-text {
+            background: #f5f5f5;
+            border-left: 3px solid #1a1a1a;
             padding: 12px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s;
+            margin: 12px 0;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
-        .student-item.active {
-            background: #e7f1ff;
-            border-color: #667eea;
+        .editable-field {
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
         }
 
-        .student-name {
-            font-size: 15px;
-            font-weight: 600;
-            color: #333;
+        .editable-field:focus {
+            outline: none;
+            border-color: #1a1a1a;
+        }
+
+        .editable-label {
+            font-size: 13px;
+            color: #999;
             margin-bottom: 4px;
         }
 
-        .student-grade {
-            font-size: 13px;
-            color: #999;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);  /* 使用新的主色 */
-            color: white;
-            border: none;
-            border-radius: 12px;  /* 更大的圆角 */
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn:hover:not(:disabled) {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
-            transform: translateY(-1px);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 20px;
-            color: #999;
-            font-size: 13px;
-        }
-
-        .empty a {
-            color: #667eea;
-            text-decoration: none;
-        }
-
-        @media (min-width: 768px) {
-            body {
-                padding: 20px;
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
             }
-
-            .card {
-                padding: 25px;
-                border-radius: 10px;
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.3s ease-out;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📋 确认任务</h1>
+    <div class="max-w-2xl mx-auto px-4 py-8">
+        <!-- 页面标题 -->
+        <div class="mb-8">
+            <h1 class="text-2xl font-medium text-gray-900 mb-2">确认任务信息</h1>
+            <p class="text-sm text-gray-500">请核对并确认以下任务</p>
         </div>
 
-        <!-- 任务列表 -->
-        <div class="card" id="taskCard">
-            <h2>📝 待确认任务</h2>
-            <div id="taskList">加载中...</div>
-        </div>
-
-        <!-- 学生信息（已自动选定） -->
-        <div class="card" id="studentInfoCard" style="display: none;">
-            <h2>👤 学生</h2>
-            <div id="selectedStudentInfo"></div>
-        </div>
-
-        <!-- 选择学生（仅在没有预选时显示） -->
-        <div class="card" id="studentSelectCard" style="display: none;">
-            <h2>👤 选择学生</h2>
-            <div class="student-list" id="studentList">
-                <div class="empty">加载中...</div>
+        <!-- 学生信息卡片 -->
+        <div id="studentInfo" class="task-card mb-6 hidden">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">学生</p>
+                    <p id="studentName" class="text-base font-medium text-gray-900"></p>
+                </div>
             </div>
         </div>
 
-        <button class="btn" id="confirmBtn" onclick="confirmTasks()" disabled>✅ 确认创建任务</button>
+        <!-- 任务列表 -->
+        <div id="taskList" class="mb-6">
+            <!-- 任务卡片将动态加载 -->
+        </div>
+
+        <!-- 确认按钮 -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4">
+            <div class="max-w-2xl mx-auto">
+                <button id="confirmBtn" class="btn-primary" onclick="confirmTasks()" disabled>
+                    确认创建任务
+                </button>
+            </div>
+        </div>
+
+        <!-- 成功提示 -->
+        <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-3xl p-10 text-center max-w-sm mx-4 animate-slide-up">
+                <div class="text-6xl mb-4">✓</div>
+                <h2 class="text-2xl font-medium text-gray-900 mb-2">任务创建成功</h2>
+                <p id="successText" class="text-gray-500 mb-6">成功创建 1 个任务</p>
+                <button onclick="goToTasks()" class="btn-primary">
+                    查看任务
+                </button>
+            </div>
+        </div>
+
+        <!-- 加载状态 -->
+        <div id="loadingState" class="text-center py-20">
+            <div class="text-gray-300 mb-4">加载中...</div>
+        </div>
+
+        <!-- 错误状态 -->
+        <div id="errorState" class="text-center py-20 hidden">
+            <div class="text-gray-300 mb-4">
+                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            <p class="text-gray-500 mb-4" id="errorText">加载失败</p>
+            <button onclick="window.location.reload()" class="text-sm text-gray-600 hover:text-gray-900">
+                重新加载
+            </button>
+        </div>
     </div>
 
     <script>
-        const API_BASE = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
+        // 从URL获取参数
         const urlParams = new URLSearchParams(window.location.search);
         const pendingId = urlParams.get('pending_id');
-        const preselectedStudentId = urlParams.get('student_id');  // 从URL获取已选的学生ID
+        const studentId = urlParams.get('student_id');
+
         let taskData = null;
-        let selectedStudent = null;
-        let students = [];
+        let studentData = null;
 
-        // 检查登录
-        function checkLogin() {
-            const family_id = localStorage.getItem('family_id');
-            if (!family_id) {
-                alert('请先登录');
-                window.location.href = '/login';
-                return false;
+        // 页面加载时执行
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!pendingId) {
+                showError('缺少必要参数');
+                return;
             }
-            return family_id;
-        }
 
-        // 获取请求头
-        function getHeaders() {
-            return {
-                'Content-Type': 'application/json',
-                'X-Family-ID': checkLogin()
-            };
-        }
+            await loadTaskData();
+
+            if (studentId) {
+                await loadStudentData();
+            } else {
+                showError('缺少学生信息');
+            }
+        });
 
         // 加载任务数据
         async function loadTaskData() {
             try {
-                const response = await fetch(API_BASE + '/api/pending');
-                const data = await response.json();
+                const response = await fetch('/api/pending');
+                if (!response.ok) throw new Error('加载失败');
 
-                const tasks = data.tasks || [];
-                const currentTask = tasks.find(t => t.pending_id === pendingId);
+                const result = await response.json();
+                const allPendingTasks = result.tasks || [];
 
-                if (currentTask) {
-                    taskData = currentTask.task_data;
-                    renderTasks();
-                } else {
-                    document.getElementById('taskList').innerHTML = '<div class="empty">任务不存在或已过期</div>';
+                // 找到对应的任务
+                const task = allPendingTasks.find(t => t.pending_id === pendingId);
+                if (!task) {
+                    showError('任务不存在或已过期');
+                    return;
                 }
+
+                taskData = task.task_data;
+
+                // 调试输出
+                console.log('加载的任务数据:', taskData);
+                console.log('任务类型:', taskData.type);
+                console.log('是否有 raw_text:', 'raw_text' in taskData);
+
+                renderTasks();
+
             } catch (error) {
                 console.error('加载任务失败:', error);
-                document.getElementById('taskList').innerHTML = '<div class="empty">加载失败</div>';
+                showError('加载任务失败: ' + error.message);
             }
+        }
+
+        // 加载学生数据
+        async function loadStudentData() {
+            try {
+                const response = await fetch('/api/students');
+                if (!response.ok) throw new Error('加载失败');
+
+                const result = await response.json();
+                const students = result.students || [];
+
+                const student = students.find(s => s.student_id === studentId);
+                if (student) {
+                    studentData = student;
+                    displayStudentInfo();
+                    enableConfirmButton();
+                } else {
+                    showError('学生不存在');
+                }
+
+            } catch (error) {
+                console.error('加载学生失败:', error);
+            }
+        }
+
+        // 显示学生信息
+        function displayStudentInfo() {
+            const container = document.getElementById('studentInfo');
+            const nameEl = document.getElementById('studentName');
+
+            nameEl.textContent = studentData.name;
+            container.classList.remove('hidden');
         }
 
         // 渲染任务列表
         function renderTasks() {
-            if (!taskData) return;
+            const container = document.getElementById('taskList');
 
-            let html = '';
+            // 处理三种不同的数据结构
+            let tasks = [];
+            let globalImages = [];
+            let rawText = '';
 
-            // 显示图片附件
-            if (taskData.images && taskData.images.length > 0) {
-                html += `
-                    <div style="margin-bottom: 12px;">
-                        <strong style="font-size: 13px; color: #666;">📎 图片附件（仅作参考）</strong>
-                        <div class="images-preview">
-                            ${taskData.images.map(img => `
-                                <div class="image-item">
-                                    <img src="${img}" alt="附件图片">
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
+            // 1. AI 多任务: {type: 'multiple', tasks: [...], images: [...]}
+            if (taskData.type === 'multiple' && taskData.tasks) {
+                tasks = taskData.tasks;
+                globalImages = taskData.images || [];
+                rawText = taskData.raw_text || '';
+            }
+            // 2. AI 单任务: {type: 'single', task: {...}, images: [...]}
+            else if (taskData.type === 'single' && taskData.task) {
+                tasks = [taskData.task];
+                globalImages = taskData.images || [];
+                rawText = taskData.raw_text || '';
+            }
+            // 3. 纯图片任务或旧格式: {description: "...", subject: "...", images: [...]}
+            else {
+                tasks = [taskData];
+                globalImages = taskData.images || [];
+                rawText = taskData.raw_text || '';
             }
 
-            if (taskData.type === 'multiple') {
-                const tasks = taskData.tasks || [];
-                tasks.forEach((task, index) => {
-                    const tags = [];
-                    if (task.subject) tags.push({ type: 'subject', text: task.subject, key: 'subject' });
-                    if (task.deadline) tags.push({ type: 'deadline', text: task.deadline, key: 'deadline' });
-
-                    html += `
-                        <div class="task-item" data-index="${index}">
-                            <div class="task-header">
-                                <div class="task-number">${task.sequence || index + 1}</div>
-                                <div class="task-content">
-                                    <div class="task-desc" id="desc-${index}">${task.description}</div>
-
-                                    <div class="task-tags" id="tags-${index}">
-                                        ${tags.map(tag => `
-                                            <span class="tag ${tag.type}">
-                                                ${tag.text}
-                                                <span class="tag-remove" onclick="removeTag(${index}, '${tag.key}')">×</span>
-                                            </span>
-                                        `).join('')}
-                                    </div>
-
-                                    <div class="tag-input">
-                                        <select class="tag-select" onchange="addTag(${index}, 'subject', this.value); this.value='';">
-                                            <option value="">选择科目...</option>
-                                            <option value="语文">语文</option>
-                                            <option value="数学">数学</option>
-                                            <option value="英语">英语</option>
-                                            <option value="物理">物理</option>
-                                            <option value="化学">化学</option>
-                                            <option value="生物">生物</option>
-                                            <option value="历史">历史</option>
-                                            <option value="地理">地理</option>
-                                            <option value="政治">政治</option>
-                                            <option value="体育">体育</option>
-                                            <option value="音乐">音乐</option>
-                                            <option value="美术">美术</option>
-                                        </select>
-                                        <input type="date"
-                                               placeholder="选择截止日期"
-                                               onchange="formatAndAddDeadline(${index}, this.value); this.value='';"
-                                               style="min-width: 140px;">
-                                        <button class="btn-small" onclick="toggleEdit(${index})">编辑内容</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            } else {
-                // 单条任务也要支持编辑和标签
-                const task = taskData.task || taskData;
-                const tags = [];
-                if (task.subject) tags.push({ type: 'subject', text: task.subject, key: 'subject' });
-                if (task.deadline) tags.push({ type: 'deadline', text: task.deadline, key: 'deadline' });
-
-                html += `
-                    <div class="task-item" data-index="0">
-                        <div class="task-header">
-                            <div class="task-number">1</div>
-                            <div class="task-content">
-                                <div class="task-desc" id="desc-0">${task.description || task.raw_text || '无文本内容'}</div>
-
-                                <div class="task-tags" id="tags-0">
-                                    ${tags.map(tag => `
-                                        <span class="tag ${tag.type}">
-                                            ${tag.text}
-                                            <span class="tag-remove" onclick="removeTag(0, '${tag.key}')">×</span>
-                                        </span>
-                                    `).join('')}
-                                </div>
-
-                                <div class="tag-input">
-                                    <select class="tag-select" onchange="addTag(0, 'subject', this.value); this.value='';">
-                                        <option value="">选择科目...</option>
-                                        <option value="语文">语文</option>
-                                        <option value="数学">数学</option>
-                                        <option value="英语">英语</option>
-                                        <option value="物理">物理</option>
-                                        <option value="化学">化学</option>
-                                        <option value="生物">生物</option>
-                                        <option value="历史">历史</option>
-                                        <option value="地理">地理</option>
-                                        <option value="政治">政治</option>
-                                        <option value="体育">体育</option>
-                                        <option value="音乐">音乐</option>
-                                        <option value="美术">美术</option>
-                                    </select>
-                                    <input type="date"
-                                           placeholder="选择截止日期"
-                                           onchange="formatAndAddDeadline(0, this.value); this.value='';"
-                                           style="min-width: 140px;">
-                                    <button class="btn-small" onclick="toggleEdit(0)">编辑内容</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            document.getElementById('taskList').innerHTML = html;
-        }
-
-        // 切换编辑模式
-        function toggleEdit(index) {
-            const descEl = document.getElementById('desc-' + index);
-            const currentDesc = descEl.textContent;
-
-            descEl.innerHTML = `<textarea class="task-desc-edit" id="edit-${index}">${currentDesc}</textarea>
-                              <div style="margin-top:8px;">
-                                  <button class="btn-small" onclick="saveEdit(${index})">保存</button>
-                                  <button class="btn-small secondary" onclick="cancelEdit(${index}, '${currentDesc.replace(/'/g, "\\'")}')">取消</button>
-                              </div>`;
-        }
-
-        // 取消编辑
-        function cancelEdit(index, originalDesc) {
-            document.getElementById('desc-' + index).innerHTML = originalDesc;
-        }
-
-        // 保存编辑
-        function saveEdit(index) {
-            const editEl = document.getElementById('edit-' + index);
-            const newDesc = editEl.value.trim();
-
-            if (!newDesc) {
-                alert('任务描述不能为空');
+            if (tasks.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 text-gray-400">暂无任务</div>';
                 return;
             }
 
-            if (taskData.tasks) {
-                // 多条任务
-                taskData.tasks[index].description = newDesc;
-            } else {
-                // 单条任务
-                const task = taskData.task || taskData;
-                task.description = newDesc;
-            }
+            container.innerHTML = tasks.map((task, index) => {
+                // 获取任务描述（AI 解析的标签）
+                const aiDescription = task.description || task.details || '';
+                const subject = task.subject || '未分类';
 
-            renderTasks();
+                // 合并全局图片和任务级图片
+                const taskImages = task.images || [];
+                const attachments = [...globalImages, ...taskImages];
+
+                return `
+                    <div class="task-card animate-slide-up" data-index="${index}" style="animation-delay: ${index * 0.1}s">
+                        <!-- 科目标签 -->
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">${subject}</span>
+                        </div>
+
+                        <!-- 原始文本（老师发的原文） -->
+                        ${rawText ? `
+                            <div class="mb-4">
+                                <div class="editable-label">老师原文</div>
+                                <div class="raw-text">${rawText}</div>
+                            </div>
+                        ` : ''}
+
+                        <!-- 附件图片（小图） -->
+                        ${attachments.length > 0 ? `
+                            <div class="mb-4">
+                                <div class="editable-label">图片附件 (${attachments.length})</div>
+                                <div class="flex flex-wrap gap-2">
+                                    ${attachments.map((img, imgIndex) => `
+                                        <img src="${img}"
+                                             alt="任务图片 ${imgIndex + 1}"
+                                             class="attachment-img"
+                                             onclick="window.open('${img}', '_blank')">
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- AI 解析的任务描述（可编辑） -->
+                        <div class="mb-3">
+                            <div class="editable-label">AI 解析的任务描述</div>
+                            <textarea
+                                class="editable-field w-full"
+                                rows="3"
+                                data-field="description"
+                                data-index="${index}"
+                                placeholder="请输入或编辑任务描述">${aiDescription}</textarea>
+                        </div>
+
+                        <!-- 科目（可编辑） -->
+                        <div class="mb-3">
+                            <div class="editable-label">科目</div>
+                            <input
+                                type="text"
+                                class="editable-field w-full"
+                                data-field="subject"
+                                data-index="${index}"
+                                placeholder="请输入或选择科目"
+                                value="${subject}">
+                        </div>
+
+                        <!-- 截止日期（可编辑） -->
+                        <div class="mb-3">
+                            <div class="editable-label">截止日期</div>
+                            <input
+                                type="date"
+                                class="editable-field w-full"
+                                data-field="deadline"
+                                data-index="${index}"
+                                ${(() => {
+                                    try {
+                                        if (task.deadline && task.deadline !== 'null' && task.deadline !== null) {
+                                            const date = new Date(task.deadline);
+                                            if (!isNaN(date.getTime())) {
+                                                return `value="${date.toISOString().split('T')[0]}"`;
+                                            }
+                                        }
+                                        return '';
+                                    } catch (e) {
+                                        return '';
+                                    }
+                                })()}>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // 隐藏加载状态
+            document.getElementById('loadingState').classList.add('hidden');
+
+            // 添加输入监听，实时更新 taskData
+            addInputListeners();
         }
 
-        // 添加标签
-        function addTag(index, tagType, tagValue) {
-            if (!tagValue || !tagValue.trim()) return;
+        // 添加输入监听
+        function addInputListeners() {
+            const editableFields = document.querySelectorAll('[data-field]');
+            editableFields.forEach(field => {
+                field.addEventListener('input', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const fieldName = e.target.dataset.field;
+                    const value = e.target.value;
 
-            if (taskData.tasks) {
-                // 多条任务
-                const task = taskData.tasks[index];
-                if (tagType === 'subject') {
-                    task.subject = tagValue;
-                } else if (tagType === 'deadline') {
-                    task.deadline = tagValue;
-                }
-            } else {
-                // 单条任务
-                const task = taskData.task || taskData;
-                if (tagType === 'subject') {
-                    task.subject = tagValue;
-                } else if (tagType === 'deadline') {
-                    task.deadline = tagValue;
-                }
-            }
-
-            renderTasks();
-        }
-
-        // 格式化日期并添加为截止时间标签
-        function formatAndAddDeadline(index, dateValue) {
-            if (!dateValue) return;
-
-            // 将 YYYY-MM-DD 格式化为 "M月D日 周X" 格式
-            const date = new Date(dateValue);
-            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-            const month = date.getMonth() + 1;
-            const day = date.getDate();
-            const weekday = weekdays[date.getDay()];
-
-            const formattedDate = `${month}月${day}日 ${weekday}`;
-            addTag(index, 'deadline', formattedDate);
-        }
-
-        // 删除标签
-        function removeTag(index, tagKey) {
-            if (taskData.tasks) {
-                // 多条任务
-                const task = taskData.tasks[index];
-                if (tagKey === 'subject') {
-                    delete task.subject;
-                } else if (tagKey === 'deadline') {
-                    delete task.deadline;
-                }
-            } else {
-                // 单条任务
-                const task = taskData.task || taskData;
-                if (tagKey === 'subject') {
-                    delete task.subject;
-                } else if (tagKey === 'deadline') {
-                    delete task.deadline;
-                }
-            }
-
-            renderTasks();
-        }
-
-        // 加载学生列表并自动选中
-        async function loadStudents() {
-            try {
-                const response = await fetch(API_BASE + '/api/students', {
-                    headers: getHeaders()
-                });
-
-                if (response.status === 401) {
-                    alert('登录已过期，请重新登录');
-                    localStorage.clear();
-                    window.location.href = '/login';
-                    return;
-                }
-
-                const data = await response.json();
-                students = data.students || [];
-
-                if (students.length > 0) {
-                    // 如果有预选的学生ID，自动选中并显示信息
-                    if (preselectedStudentId) {
-                        const preselectedStudent = students.find(s => s.student_id === preselectedStudentId);
-                        if (preselectedStudent) {
-                            selectedStudent = preselectedStudent.student_id;
-                            displaySelectedStudent(preselectedStudent);
-                            document.getElementById('confirmBtn').disabled = false;
-                            return;
-                        }
+                    // 更新 taskData
+                    if (taskData.type === 'multiple' && taskData.tasks) {
+                        taskData.tasks[index][fieldName] = value;
+                    } else if (taskData.type === 'single' && taskData.task) {
+                        taskData.task[fieldName] = value;
+                    } else {
+                        taskData[fieldName] = value;
                     }
 
-                    // 如果没有预选或找不到学生，显示学生选择列表
-                    document.getElementById('studentInfoCard').style.display = 'none';
-                    document.getElementById('studentSelectCard').style.display = 'block';
-                    document.getElementById('studentList').innerHTML = students.map(s => `
-                        <div class="student-item" onclick="selectStudent('${s.student_id}', this)">
-                            <div class="student-name">${s.name}</div>
-                            <div class="student-grade">${s.grade || '未设置年级'}</div>
-                        </div>
-                    `).join('');
-                } else {
-                    document.getElementById('studentInfoCard').style.display = 'none';
-                    document.getElementById('studentSelectCard').style.display = 'block';
-                    document.getElementById('studentList').innerHTML = `
-                        <div class="empty">暂无学生，<a href="/">去添加</a></div>
-                    `;
-                }
-            } catch (error) {
-                console.error('加载学生失败:', error);
-                document.getElementById('studentInfoCard').style.display = 'none';
-                document.getElementById('studentSelectCard').style.display = 'block';
-                document.getElementById('studentList').innerHTML = '<div class="empty">加载失败</div>';
-            }
+                    console.log(`更新任务 ${index} 的 ${fieldName}: ${value}`);
+                });
+            });
         }
 
-        // 显示已选学生信息
-        function displaySelectedStudent(student) {
-            const card = document.getElementById('studentInfoCard');
-            const info = document.getElementById('selectedStudentInfo');
-
-            info.innerHTML = `
-                <div class="student-item active" style="cursor: default;">
-                    <div class="student-name">${student.name}</div>
-                    <div class="student-grade">${student.grade || '未设置年级'}</div>
-                </div>
-            `;
-            card.style.display = 'block';
-        }
-
-        // 手动选择学生（仅在没有预选时使用）
-        function selectStudent(id, element) {
-            selectedStudent = id;
-
-            // 更新UI
-            document.querySelectorAll('.student-item').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-
-            // 启用确认按钮
-            document.getElementById('confirmBtn').disabled = false;
+        // 启用确认按钮
+        function enableConfirmButton() {
+            const btn = document.getElementById('confirmBtn');
+            btn.disabled = false;
         }
 
         // 确认任务
         async function confirmTasks() {
-            if (!selectedStudent) {
-                alert('请选择学生');
+            if (!studentData || !taskData) {
+                alert('数据不完整，请重新加载页面');
                 return;
             }
 
@@ -709,116 +456,73 @@
             btn.textContent = '确认中...';
 
             try {
-                const response = await fetch(API_BASE + '/api/confirm', {
+                // 准备要发送的任务数据
+                let tasksToSend = [];
+
+                if (taskData.type === 'multiple' && taskData.tasks) {
+                    tasksToSend = taskData.tasks;
+                } else if (taskData.type === 'single' && taskData.task) {
+                    tasksToSend = [taskData.task];
+                } else {
+                    tasksToSend = [taskData];
+                }
+
+                const response = await fetch('/api/confirm', {
                     method: 'POST',
-                    headers: getHeaders(),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         pending_id: pendingId,
-                        student_id: selectedStudent,
-                        updated_tasks: taskData.tasks  // 传递编辑后的任务数据
+                        student_id: studentId,
+                        updated_tasks: tasksToSend
                     })
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    // 提取任务ID列表
-                    let taskIds = [];
-                    if (result.tasks) {
-                        // 多条任务
-                        taskIds = result.tasks;
-                    } else if (result.task_id) {
-                        // 单条任务
-                        taskIds = [result.task_id];
-                    }
-
-                    // 显示成功提示
-                    showSuccessMessage(taskIds);
+                    showSuccess();
                 } else {
                     alert('确认失败：' + (result.error || '未知错误'));
                     btn.disabled = false;
-                    btn.textContent = '✅ 确认创建任务';
+                    btn.textContent = '确认创建任务';
                 }
+
             } catch (error) {
                 console.error('确认失败:', error);
                 alert('确认失败：' + error.message);
                 btn.disabled = false;
-                btn.textContent = '✅ 确认创建任务';
+                btn.textContent = '确认创建任务';
             }
         }
 
-        // 显示成功提示并跳转
-        function showSuccessMessage(taskIds) {
-            // 创建成功提示卡片
-            const successCard = document.createElement('div');
-            successCard.id = 'successCard';
-            successCard.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: white;
-                padding: 40px;
-                border-radius: 20px;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                text-align: center;
-                z-index: 1000;
-                animation: slideUp 0.5s ease-out;
-                min-width: 320px;
-            `;
+        // 显示成功提示
+        function showSuccess() {
+            const modal = document.getElementById('successModal');
+            const text = document.getElementById('successText');
 
-            const taskCount = taskIds.length;
-            successCard.innerHTML = `
-                <div style="font-size: 64px; margin-bottom: 20px;">🎉</div>
-                <h2 style="color: #10b981; margin-bottom: 10px; font-size: 24px;">任务创建成功！</h2>
-                <p style="color: #666; margin-bottom: 30px;">成功创建 ${taskCount} 个任务</p>
-                <div style="display: flex; gap: 10px; justify-content: center; flex-direction: column;">
-                    <button onclick="window.location.href='/my-tasks'"
-                            style="padding: 12px 30px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);">
-                        📋 查看任务
-                    </button>
-                    <button onclick="window.location.href='/'"
-                            style="padding: 12px 30px; background: #e5e7eb; color: #374151; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; transition: all 0.3s;">
-                        ➕ 继续添加
-                    </button>
-                </div>
-                <p style="color: #9ca3af; font-size: 14px; margin-top: 20px;">3秒后自动跳转到任务中心...</p>
-            `;
+            let taskCount = 1;
+            if (taskData.type === 'multiple' && taskData.tasks) {
+                taskCount = taskData.tasks.length;
+            }
 
-            // 遮罩层
-            const overlay = document.createElement('div');
-            overlay.id = 'successOverlay';
-            overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0,0,0,0.5);
-                z-index: 999;
-            `;
+            text.textContent = `成功创建 ${taskCount} 个任务`;
 
-            document.body.appendChild(overlay);
-            document.body.appendChild(successCard);
-
-            // 3秒后自动跳转
-            let countdown = 3;
-            const countdownEl = successCard.querySelector('p:last-child');
-            const timer = setInterval(() => {
-                countdown--;
-                if (countdown > 0) {
-                    countdownEl.textContent = `${countdown}秒后自动跳转到任务中心...`;
-                } else {
-                    clearInterval(timer);
-                    window.location.href = '/my-tasks';
-                }
-            }, 1000);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
 
-        // 初始化
-        if (checkLogin()) {
-            loadTaskData();
-            loadStudents();
+        // 跳转到任务页面
+        function goToTasks() {
+            window.location.href = '/my-tasks';
+        }
+
+        // 显示错误
+        function showError(message) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('errorState').classList.remove('hidden');
+            document.getElementById('errorText').textContent = message;
         }
     </script>
 </body>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>登录/注册 - 作业助手</title>
@@ -13,6 +14,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --zen-bg: #ffffff;
+            --zen-page-bg: #fafafa;
+            --zen-text: #1a1a1a;
+            --zen-text-light: #999999;
+            --zen-border: #f0f0f0;
+            --zen-border-input: #e9ecef;
+            --zen-error-bg: #fef2f2;
+            --zen-error-text: #991b1b;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -21,47 +33,53 @@
 
         body {
             font-family: 'Noto Sans SC', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);  /* 新的主色 */
+            background: var(--zen-page-bg);
             padding: 20px;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-weight: 300;
+            -webkit-font-smoothing: antialiased;
         }
 
         .container {
-            max-width: 400px;
+            max-width: 420px;
             width: 100%;
         }
 
         .card {
-            background: white;
-            padding: 30px 25px;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            background: var(--zen-bg);
+            padding: 48px 40px;
+            border-radius: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04);
         }
 
         .logo {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 48px;
         }
 
         .logo h1 {
-            font-size: 28px;
-            color: #333;
+            font-size: 32px;
+            font-weight: 500;
+            color: var(--zen-text);
             margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
 
         .logo p {
-            font-size: 14px;
-            color: #999;
+            font-size: 13px;
+            font-weight: 300;
+            color: var(--zen-text-light);
+            letter-spacing: 0.5px;
         }
 
         .tabs {
             display: flex;
-            margin-bottom: 25px;
-            background: #f5f7fa;
-            border-radius: 8px;
+            margin-bottom: 32px;
+            background: var(--zen-border);
+            border-radius: 12px;
             padding: 4px;
         }
 
@@ -70,65 +88,77 @@
             text-align: center;
             padding: 12px;
             cursor: pointer;
-            border-radius: 6px;
-            font-size: 15px;
-            color: #666;
-            transition: all 0.2s;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--zen-text-light);
+            transition: all 0.2s ease;
+            letter-spacing: 0.5px;
         }
 
         .tab.active {
-            background: white;
-            color: #667eea;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background: var(--zen-bg);
+            color: var(--zen-text);
+            font-weight: 500;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
 
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 6px;
+            font-size: 13px;
+            color: var(--zen-text);
+            margin-bottom: 8px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
         }
 
         .form-group input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 6px;
+            padding: 14px 16px;
+            border: 1px solid var(--zen-border-input);
+            border-radius: 12px;
             font-size: 15px;
+            font-weight: 300;
             box-sizing: border-box;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
+            background: var(--zen-bg);
+            color: var(--zen-text);
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: #3b82f6;  /* 使用新的主色 */
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);  /* 添加 focus ring */
+            border-color: var(--zen-text);
+            box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.06);
+        }
+
+        .form-group input::placeholder {
+            color: #d4d4d4;
+            font-weight: 300;
         }
 
         .btn {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);  /* 新的主色 */
+            padding: 16px;
+            background: var(--zen-text);
             color: white;
             border: none;
-            border-radius: 12px;  /* 更大的圆角 */
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 8px;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+            letter-spacing: 0.3px;
         }
 
         .btn:hover {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            background: #333333;
             transform: translateY(-1px);
-            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         .btn:active {
@@ -137,17 +167,19 @@
 
         .btn:focus {
             outline: none;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.12);
         }
 
         .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-bottom: 16px;
+            background: var(--zen-error-bg);
+            color: var(--zen-error-text);
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 400;
+            margin-bottom: 20px;
             display: none;
+            border: 1px solid #fecaca;
         }
 
         .error.show {
@@ -164,7 +196,7 @@
             }
 
             .card {
-                padding: 40px;
+                padding: 56px 48px;
             }
         }
     </style>
@@ -173,7 +205,7 @@
     <div class="container">
         <div class="card">
             <div class="logo">
-                <h1>📚 作业助手</h1>
+                <h1>作业助手</h1>
                 <p>智能提取老师作业任务</p>
             </div>
 
