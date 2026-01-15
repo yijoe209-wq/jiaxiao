@@ -16,11 +16,8 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-    # 数据库配置 - 根据 ENV 环境变量选择
-    if os.getenv('ENV') == 'development':
-        DATABASE_URL = 'sqlite:///jiaxiao_dev.db'
-    else:
-        DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///jiaxiao.db')
+    # 数据库配置 - 统一使用 jiaxiao.db
+    DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///jiaxiao.db')
 
     # 微信配置
     WECHAT_TOKEN = os.getenv('WECHAT_TOKEN', 'your-wechat-token')
@@ -60,7 +57,7 @@ class Config:
 class DevelopmentConfig(Config):
     """开发环境配置"""
     DEBUG = True
-    DATABASE_URL = 'sqlite:///jiaxiao_dev.db'
+    DATABASE_URL = 'sqlite:///jiaxiao.db'
 
 
 class ProductionConfig(Config):

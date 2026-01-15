@@ -234,9 +234,9 @@ class Database:
 
 
 # 全局数据库实例
-# 注意：默认使用 jiaxiao_dev.db 以避免与生产环境冲突
+# 统一使用 jiaxiao.db，避免开发和生产环境数据不一致
 import os
-default_db = 'sqlite:///jiaxiao_dev.db' if os.getenv('ENV') == 'development' else 'sqlite:///jiaxiao.db'
+default_db = 'sqlite:///jiaxiao.db'
 db = Database(default_db)
 
 

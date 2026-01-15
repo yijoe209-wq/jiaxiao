@@ -10,7 +10,10 @@
       "Bash(npx playwright test:*)",
       "Bash(tee:*)",
       "Bash(find:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(pkill:*)",
+      "Bash(python3:*)",
+      "Bash(ENV=development PORT=5001 python:*)"
     ]
   }
 }

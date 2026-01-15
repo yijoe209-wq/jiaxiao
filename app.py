@@ -20,6 +20,12 @@ import uuid
 # 创建 Flask 应用
 app = Flask(__name__, template_folder='templates')
 app.config.from_object(Config)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+app.config['SESSION_COOKIE_PATH'] = '/'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 7  # 7 days
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 最大上传 16MB
 
 # 初始化指标中间件
@@ -31,7 +37,7 @@ init_db(Config.DATABASE_URL)
 # 创建上传目录（使用持久化存储）
 # Zeabur: /app/data 映射到持久化存储
 # 本地开发: 使用 ./data/uploads
-if os.getenv('ENV') == 'development':
+if os.getenv('ENV') == 'development' or os.getenv('ENVIRONMENT') == 'development':
     UPLOAD_FOLDER = './data/uploads'
 else:
     UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/app/data/uploads')
@@ -49,25 +55,40 @@ def allowed_file(filename):
 
 @app.route('/')
 def index():
-    """首页 - 快速输入页面"""
+    """首页 - 任务中心"""
+    return render_template('my-tasks.html')
+
+
+@app.route('/add')
+def add_task_page():
+    """快速添加任务"""
+    family_id = get_current_family_id()
+    if not family_id:
+        return redirect('/login')
     return render_template('simulate.html')
 
 
 @app.route('/tasks')
 def tasks_page():
     """任务确认页面"""
+    family_id = get_current_family_id()
+    if not family_id:
+        return redirect('/login')
     return render_template('tasks.html')
 
 
 @app.route('/my-tasks')
 def my_tasks_page():
-    """我的任务 - 任务查看和管理页面"""
-    return render_template('my-tasks.html')
+    """我的任务 - 任务查看和管理页面（兼容旧链接，重定向到首页）"""
+    return redirect('/')
 
 
 @app.route('/students')
 def students_page():
     """学生管理页面"""
+    family_id = get_current_family_id()
+    if not family_id:
+        return redirect('/login')
     return render_template('students.html')
 
 
@@ -780,6 +801,11 @@ def build_confirm_message(result, pending_id):
 @app.route('/api/pending')
 def get_pending_tasks():
     """获取待确认任务列表"""
+    # 校验登录状态
+    family_id = get_current_family_id()
+    if not family_id:
+        return jsonify({'error': '请先登录'}), 401
+
     try:
         session = db.get_session()
         pending_tasks = session.query(PendingTask).filter(
@@ -811,6 +837,11 @@ def get_pending_tasks():
 @app.route('/api/simulate', methods=['POST'])
 def simulate_wechat_forward():
     """模拟微信转发消息（用于测试）"""
+    # 校验登录状态
+    family_id = get_current_family_id()
+    if not family_id:
+        return jsonify({'error': '请先登录'}), 401
+
     try:
         data = request.json
         message = data.get('message', '').strip()
@@ -1064,17 +1095,16 @@ def check_auth():
 @app.route('/api/students', methods=['GET'])
 def get_students():
     """获取当前家庭的学生列表"""
-    try:
-        family_id = get_current_family_id()
+    # 校验登录状态
+    family_id = get_current_family_id()
+    if not family_id:
+        return jsonify({'error': '请先登录'}), 401
 
+    try:
         session = db.get_session()
 
-        # 如果提供了 family_id，按家庭过滤；否则返回所有学生（演示模式）
-        if family_id:
-            students = session.query(Student).filter_by(family_id=family_id).order_by(Student.created_at).all()
-        else:
-            # 演示模式：返回所有学生
-            students = session.query(Student).order_by(Student.created_at).all()
+        # 只返回该家庭的学生
+        students = session.query(Student).filter_by(family_id=family_id).order_by(Student.created_at).all()
 
         result = [{
             'student_id': s.student_id,
@@ -1211,12 +1241,16 @@ def delete_student(student_id):
 @app.route('/api/confirm', methods=['POST'])
 def confirm_task():
     """确认任务（支持用户编辑后的数据）"""
+    # 校验登录状态
+    family_id = get_current_family_id()
+    if not family_id:
+        return jsonify({'error': '请先登录'}), 401
+
     try:
         data = request.json
         pending_id = data.get('pending_id')
         student_id = data.get('student_id')
         updated_tasks = data.get('updated_tasks')  # 用户编辑后的任务数据
-        family_id = get_current_family_id()
 
         if not pending_id or not student_id:
             return jsonify({'error': '缺少必要参数'}), 400
@@ -1270,6 +1304,39 @@ def confirm_task():
     except Exception as e:
         logger.error(f"确认任务失败: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/tasks')
+def get_all_tasks():
+    """获取当前家庭的所有任务（任务中心使用）"""
+    family_id = get_current_family_id()
+
+    # 必须登录才能查看任务
+    if not family_id:
+        return jsonify({'error': '请先登录'}), 401
+
+    session = db.get_session()
+    try:
+        # 使用JOIN优化性能，只查询该家庭的任务
+        tasks = session.query(Task).join(
+            Student, Task.student_id == Student.student_id
+        ).filter(
+            Student.family_id == family_id
+        ).order_by(
+            Task.is_completed.asc(),
+            Task.deadline.asc().nullslast(),
+            Task.created_at.desc()
+        ).all()
+
+        # 转换为字典
+        result = [task.to_dict() for task in tasks]
+        return jsonify(result)
+
+    except Exception as e:
+        logger.error(f"获取任务列表失败: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+    finally:
+        session.close()
 
 
 @app.route('/api/tasks/<student_id>')
