@@ -4,8 +4,6 @@
 
 # 数据库
 *.db
-*.sqlite
-*.sqlite3
 *.db-shm
 *.db-wal
 
@@ -70,6 +68,6 @@ htmlcov/
 *.bak
 .cache/
 
-# 本地开发文件
-organize_files.sh
-jiaxiao_dev.db*
+# 开发文件
+*_dev.db*
+test-output.log
