@@ -9,7 +9,6 @@ from datetime import datetime
 from config import Config
 from models import db, init_db, Family, Student, Task, PendingTask
 from utils import logger, metrics, MetricMiddleware
-from llm_parser import parse_message
 import hashlib
 import json
 import os
