@@ -1535,8 +1535,18 @@ def health_check():
     try:
         from sqlalchemy import text
         session = db.get_session()
+
+        # 检查数据库连接
         session.execute(text('SELECT 1'))
+
+        # 检查表是否存在
+        result = session.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
+        tables = [row[0] for row in result.fetchall()]
+
         checks['checks']['database'] = 'ok'
+        checks['checks']['tables'] = tables
+        checks['checks']['db_url'] = str(db.engine.url)
+
     except Exception as e:
         checks['checks']['database'] = f'error: {e}'
         checks['status'] = 'error'
