@@ -1533,19 +1533,21 @@ def health_check():
 
     # 数据库检查
     try:
-        from sqlalchemy import text
+        from sqlalchemy import text, inspect
         session = db.get_session()
 
         # 检查数据库连接
         session.execute(text('SELECT 1'))
 
-        # 检查表是否存在
-        result = session.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
-        tables = [row[0] for row in result.fetchall()]
+        # 检查表是否存在（兼容 SQLite 和 PostgreSQL）
+        inspector = inspect(db.engine)
+        tables = inspector.get_table_names()
 
         checks['checks']['database'] = 'ok'
         checks['checks']['tables'] = tables
         checks['checks']['db_url'] = str(db.engine.url)
+
+        session.close()
 
     except Exception as e:
         checks['checks']['database'] = f'error: {e}'
