@@ -249,8 +249,7 @@ def init_db(database_url=None):
     global db
     if database_url:
         db = Database(database_url)
-        # 重新创建表
-        db.create_tables()
-    elif not db.engine:
-        db.create_tables()
+
+    # 总是创建表（如果不存在）
+    db.create_tables()
     return db
