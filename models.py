@@ -198,6 +198,10 @@ class Database:
             }
         else:
             # PostgreSQL 等其他数据库
+            # 确保 URL 使用正确的驱动 (postgresql+psycopg:// 而不是 postgresql://)
+            if database_url.startswith('postgresql://'):
+                database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+
             engine_kwargs = {
                 'echo': False,
                 'pool_pre_ping': True,
