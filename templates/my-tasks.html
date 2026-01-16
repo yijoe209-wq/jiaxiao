@@ -346,14 +346,37 @@
         // 加载任务列表
         async function loadTasks() {
             try {
+                console.log('📊 开始加载任务...');
                 const response = await fetch('/api/tasks');
-                if (!response.ok) throw new Error('加载失败');
+                console.log('📊 响应状态:', response.status);
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        console.error('❌ 未登录，跳转到登录页');
+                        window.location.href = '/login';
+                        return;
+                    }
+                    throw new Error(`加载失败: ${response.status}`);
+                }
+
                 const tasks = await response.json();
+                console.log('📊 加载任务数量:', tasks.length);
                 allTasks = tasks;
                 updateStatistics();
                 renderTasks();
             } catch (error) {
-                console.error('加载任务失败:', error);
+                console.error('❌ 加载任务失败:', error);
+                // 显示错误提示
+                const taskList = document.getElementById('taskList');
+                if (taskList) {
+                    taskList.innerHTML = `
+                        <div class="p-8 text-center text-red-600">
+                            <p class="mb-2">⚠️ 任务加载失败</p>
+                            <p class="text-sm text-gray-600">${error.message}</p>
+                            <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg">重试</button>
+                        </div>
+                    `;
+                }
             }
         }
 
@@ -415,6 +438,13 @@
             const subjectFilter = document.getElementById('subjectFilter').value;
             const statusFilter = document.getElementById('statusFilter').value;
 
+            console.log('🔍 当前筛选条件:', {
+                student: studentFilter,
+                subject: subjectFilter,
+                status: statusFilter,
+                quick: currentQuickFilter
+            });
+
             // 筛选任务
             let filteredTasks = allTasks.filter(task => {
                 if (studentFilter !== 'all' && task.student_id !== studentFilter) return false;
@@ -423,6 +453,8 @@
                 if (statusFilter === 'completed' && !task.is_completed) return false;
                 return true;
             });
+
+            console.log('🔍 筛选后任务数:', filteredTasks.length, '/', allTasks.length);
 
             // 快速筛选
             const now = new Date();
