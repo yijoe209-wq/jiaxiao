@@ -1283,8 +1283,16 @@ def confirm_task():
             if updated_tasks:
                 import json
                 task_data = json.loads(pending_task.task_data)
-                if 'tasks' in task_data:
+
+                # 根据任务类型更新数据
+                if task_data.get('type') == 'multiple' and 'tasks' in task_data:
+                    # 多任务：更新 tasks 数组
                     task_data['tasks'] = updated_tasks
+                elif task_data.get('type') == 'single' and 'task' in task_data:
+                    # 单任务：更新 task.task
+                    if len(updated_tasks) > 0:
+                        task_data['task']['task'] = updated_tasks[0]
+
                 pending_task.task_data = json.dumps(task_data, ensure_ascii=False)
                 session.commit()
                 logger.info(f"更新待确认任务数据: pending_id={pending_id}")

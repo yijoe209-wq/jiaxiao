@@ -430,7 +430,12 @@
                     if (taskData.type === 'multiple' && taskData.tasks) {
                         taskData.tasks[index][fieldName] = value;
                     } else if (taskData.type === 'single' && taskData.task) {
-                        taskData.task[fieldName] = value;
+                        // 修复：更新真正的任务数据 taskData.task.task，而不是 wrapper
+                        if (taskData.task.task) {
+                            taskData.task.task[fieldName] = value;
+                        } else {
+                            taskData.task[fieldName] = value;
+                        }
                     } else {
                         taskData[fieldName] = value;
                     }

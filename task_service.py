@@ -326,11 +326,16 @@ class TaskService:
         """确认单条任务"""
         # 兼容多种数据结构
         if 'task' in task_data:
-            # 旧格式：{task: {...}, images: [...]}
-            task_info = task_data['task']
+            # 新格式：{task: {intent, task: {...}}, images: [...]}
+            # 真正的任务数据在 task.task 里面
+            task_wrapper = task_data['task']
+            if 'task' in task_wrapper:
+                task_info = task_wrapper['task']
+            else:
+                task_info = task_wrapper
             images = task_data.get('images', [])
         else:
-            # 新格式：{description: ..., subject: ..., images: [...]}
+            # 旧格式：{description: ..., subject: ..., images: [...]}
             task_info = task_data
             images = task_data.get('images', [])
 
