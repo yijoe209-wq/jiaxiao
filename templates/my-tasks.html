@@ -326,7 +326,8 @@
             try {
                 const response = await fetch('/api/students');
                 if (!response.ok) throw new Error('加载失败');
-                const students = await response.json();
+                const data = await response.json();
+                const students = data.students || [];  // 修复：API 返回 {students: [...]}
                 allStudents = students;
 
                 // 填充筛选器
