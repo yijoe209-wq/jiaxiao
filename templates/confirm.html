@@ -515,7 +515,13 @@
 
         // 跳转到任务页面
         function goToTasks() {
-            window.location.href = '/my-tasks';
+            // 隐藏弹窗
+            const modal = document.getElementById('successModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+
+            // 使用 location.replace 确保在同一个 HTTP 会话中跳转，cookie 不会被丢失
+            window.location.replace('/my-tasks');
         }
 
         // 显示错误
