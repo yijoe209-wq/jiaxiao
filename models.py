@@ -234,6 +234,18 @@ class Database:
 
     def get_session(self):
         """获取数据库会话"""
+        # 确保表存在（防止多 worker 进程问题）
+        try:
+            from sqlalchemy import inspect
+            inspector = inspect(self.engine)
+            existing_tables = inspector.get_table_names()
+
+            if not existing_tables or 'families' not in existing_tables:
+                print(f"⚠️ 表不存在，重新创建... 当前表: {existing_tables}")
+                Base.metadata.create_all(bind=self.engine)
+        except Exception as e:
+            print(f"⚠️ 检查表时出错: {e}")
+
         return self.SessionLocal()
 
 
