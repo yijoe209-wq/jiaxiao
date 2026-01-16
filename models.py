@@ -240,7 +240,19 @@ class Database:
 # 全局数据库实例
 # 统一使用 jiaxiao.db，避免开发和生产环境数据不一致
 import os
-default_db = 'sqlite:///jiaxiao.db'
+
+# 使用绝对路径，确保多 worker 进程使用同一个数据库文件
+if os.getenv('ENV') == 'development' or os.getenv('ENVIRONMENT') == 'development':
+    db_path = os.path.abspath('jiaxiao.db')
+else:
+    # Zeabur: 使用 /app/data 目录持久化存储
+    data_dir = '/app/data'
+    os.makedirs(data_dir, exist_ok=True)
+    db_path = os.path.join(data_dir, 'jiaxiao.db')
+
+default_db = f'sqlite:///{db_path}'
+print(f"📊 数据库路径: {db_path}")
+
 db = Database(default_db)
 
 
