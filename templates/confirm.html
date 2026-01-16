@@ -464,7 +464,9 @@
                 if (taskData.type === 'multiple' && taskData.tasks) {
                     tasksToSend = taskData.tasks;
                 } else if (taskData.type === 'single' && taskData.task) {
-                    tasksToSend = [taskData.task];
+                    // 修复：真正的任务数据在 taskData.task.task 里面
+                    const actualTask = taskData.task.task || taskData.task;
+                    tasksToSend = [actualTask];
                 } else {
                     tasksToSend = [taskData];
                 }
