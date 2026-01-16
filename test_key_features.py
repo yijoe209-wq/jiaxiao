@@ -27,101 +27,101 @@ async def test_student_selection_and_task_creation():
         await page.goto("https://edu-track.zeabur.app/students")
         await asyncio.sleep(2)
 
-            # 检查现有学生
-            existing_students = await page.locator('[class*="student"], [class*="card"]').count()
-            print(f"   现有学生: {existing_students} 个")
+        # 检查现有学生
+        existing_students = await page.locator('[class*="student"], [class*="card"]').count()
+        print(f"   现有学生: {existing_students} 个")
 
-            # 2. 添加新学生
-            print("\n2️⃣ 添加新学生")
-            add_btn = page.locator('button:has-text("添加"), button:has-text("新增")')
-            if await add_btn.count() > 0:
-                await add_btn.first.click()
-                await asyncio.sleep(1)
-
-                # 填写学生信息
-                await page.fill('input[name="name"]', "测试学生李四")
-                await page.fill('input[name="grade"]', "四年级")
-                await page.fill('input[name="class_name"]', "1班")
-
-                # 提交
-                await page.locator('button:has-text("确定"), button:has-text("保存")').click()
-                await asyncio.sleep(2)
-
-                print("   ✅ 学生添加成功")
-
-                # 验证学生列表
-                new_count = await page.locator('[class*="student"], [class*="card"]').count()
-                print(f"   更新后学生: {new_count} 个")
-
-            # 3. 访问添加任务页面
-            print("\n3️⃣ 访问添加任务页面")
-            await page.goto("https://edu-track.zeabur.app/add")
-            await asyncio.sleep(2)
-
-            # 4. 输入测试任务
-            print("\n4️⃣ 输入测试任务")
-            await page.locator('textarea').fill("英语：完成第3单元单词练习，明天前提交")
+        # 2. 添加新学生
+        print("\n2️⃣ 添加新学生")
+        add_btn = page.locator('button:has-text("添加"), button:has-text("新增")')
+        if await add_btn.count() > 0:
+            await add_btn.first.click()
             await asyncio.sleep(1)
 
-            # 5. 点击 AI 解析
-            print("\n5️⃣ 点击 AI 解析")
-            parse_btn = page.locator('button:has-text("解析"), button:has-text("AI")')
-            if await parse_btn.count() > 0:
-                await parse_btn.first.click()
-                print("   ⏳ 等待 AI 解析...")
-                await asyncio.sleep(12)
+            # 填写学生信息
+            await page.fill('input[name="name"]', "测试学生李四")
+            await page.fill('input[name="grade"]', "四年级")
+            await page.fill('input[name="class_name"]', "1班")
 
-                # 6. 检查解析结果
-                print("\n6️⃣ 检查学生选择器")
+            # 提交
+            await page.locator('button:has-text("确定"), button:has-text("保存")').click()
+            await asyncio.sleep(2)
 
-                # 方法1: 查找下拉选择框
-                select = page.locator('select[name="student_id"], .student-select, select')
-                select_count = await select.count()
+            print("   ✅ 学生添加成功")
 
-                # 方法2: 查找学生选择的其他形式
-                radio = page.locator('input[type="radio"][name*="student"]')
-                radio_count = await radio.count()
+            # 验证学生列表
+            new_count = await page.locator('[class*="student"], [class*="card"]').count()
+            print(f"   更新后学生: {new_count} 个")
 
-                # 方法3: 查找学生卡片选择
-                card = page.locator('[class*="student"] [class*="selectable"]')
-                card_count = await card.count()
+        # 3. 访问添加任务页面
+        print("\n3️⃣ 访问添加任务页面")
+        await page.goto("https://edu-track.zeabur.app/add")
+        await asyncio.sleep(2)
 
-                print(f"   下拉选择框: {select_count} 个")
-                print(f"   单选按钮: {radio_count} 个")
-                print(f"   可选卡片: {card_count} 个")
+        # 4. 输入测试任务
+        print("\n4️⃣ 输入测试任务")
+        await page.locator('textarea').fill("英语：完成第3单元单词练习，明天前提交")
+        await asyncio.sleep(1)
 
-                if select_count > 0:
-                    # 检查下拉选项
-                    options = await select.locator('option').all()
-                    print(f"   ✅ 找到下拉选择框，选项: {len(options)} 个")
+        # 5. 点击 AI 解析
+        print("\n5️⃣ 点击 AI 解析")
+        parse_btn = page.locator('button:has-text("解析"), button:has-text("AI")')
+        if await parse_btn.count() > 0:
+            await parse_btn.first.click()
+            print("   ⏳ 等待 AI 解析...")
+            await asyncio.sleep(12)
 
-                    for i, option in enumerate(options):
-                        text = await option.text_content()
-                        print(f"      选项 {i+1}: {text}")
+            # 6. 检查解析结果
+            print("\n6️⃣ 检查学生选择器")
 
-                elif radio_count > 0:
-                    print(f"   ✅ 找到单选按钮选择方式")
+            # 方法1: 查找下拉选择框
+            select = page.locator('select[name="student_id"], .student-select, select')
+            select_count = await select.count()
 
-                elif card_count > 0:
-                    print(f"   ✅ 找到卡片选择方式")
-                else:
-                    print("   ❌ 未找到学生选择器")
-                    # 截图看看页面有什么
-                    await page.screenshot(path="debug_no_student_selector.png")
+            # 方法2: 查找学生选择的其他形式
+            radio = page.locator('input[type="radio"][name*="student"]')
+            radio_count = await radio.count()
 
-                # 7. 尝试选择学生（如果有选择器）
-                if select_count > 0:
-                    try:
-                        await select.first.select_option(index=0)
-                        print("   ✅ 成功选择第一个学生")
-                    except:
-                        print("   ⚠️ 选择失败")
+            # 方法3: 查找学生卡片选择
+            card = page.locator('[class*="student"] [class*="selectable"]')
+            card_count = await card.count()
 
-        except Exception as e:
-            print(f"   ❌ 错误: {e}")
-            await page.screenshot(path="debug_student_selection_error.png")
+            print(f"   下拉选择框: {select_count} 个")
+            print(f"   单选按钮: {radio_count} 个")
+            print(f"   可选卡片: {card_count} 个")
 
-        await browser.close()
+            if select_count > 0:
+                # 检查下拉选项
+                options = await select.locator('option').all()
+                print(f"   ✅ 找到下拉选择框，选项: {len(options)} 个")
+
+                for i, option in enumerate(options):
+                    text = await option.text_content()
+                    print(f"      选项 {i+1}: {text}")
+
+            elif radio_count > 0:
+                print(f"   ✅ 找到单选按钮选择方式")
+
+            elif card_count > 0:
+                print(f"   ✅ 找到卡片选择方式")
+            else:
+                print("   ❌ 未找到学生选择器")
+                # 截图看看页面有什么
+                await page.screenshot(path="debug_no_student_selector.png")
+
+            # 7. 尝试选择学生（如果有选择器）
+            if select_count > 0:
+                try:
+                    await select.first.select_option(index=0)
+                    print("   ✅ 成功选择第一个学生")
+                except:
+                    print("   ⚠️ 选择失败")
+
+    except Exception as e:
+        print(f"   ❌ 错误: {e}")
+        await page.screenshot(path="debug_student_selection_error.png")
+
+    await browser.close()
 
 
 async def test_task_display_and_filtering():

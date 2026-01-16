@@ -313,7 +313,7 @@
                     return false;
                 }
                 const data = await response.json();
-                return data.authenticated;
+                return data.loggedIn;  // 修复：API 返回的是 loggedIn，不是 authenticated
             } catch (error) {
                 console.error('认证检查失败:', error);
                 window.location.href = '/login';
