@@ -302,9 +302,11 @@
                 globalImages = taskData.images || [];
                 rawText = taskData.raw_text || '';
             }
-            // 2. AI 单任务: {type: 'single', task: {...}, images: [...]}
+            // 2. AI 单任务: {type: 'single', task: {task: {...}}, images: [...]}
             else if (taskData.type === 'single' && taskData.task) {
-                tasks = [taskData.task];
+                // 修复：真正的任务数据在 taskData.task.task 里面
+                const actualTask = taskData.task.task || taskData.task;
+                tasks = [actualTask];
                 globalImages = taskData.images || [];
                 rawText = taskData.raw_text || '';
             }
