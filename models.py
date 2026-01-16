@@ -250,22 +250,31 @@ class Database:
 
 
 # 全局数据库实例
-# 统一使用 jiaxiao.db，避免开发和生产环境数据不一致
+# 优先使用环境变量中的 DATABASE_URL (PostgreSQL)
 import os
 
-# 使用绝对路径，确保多 worker 进程使用同一个数据库文件
-if os.getenv('ENV') == 'development' or os.getenv('ENVIRONMENT') == 'development':
-    db_path = os.path.abspath('jiaxiao.db')
+database_url = os.getenv('DATABASE_URL')
+
+if database_url:
+    # 使用 PostgreSQL (Zeabur 提供)
+    # 确保使用 psycopg 驱动
+    if database_url.startswith('postgresql://'):
+        database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+    print(f"📊 使用 PostgreSQL: {database_url}")
 else:
-    # Zeabur: 使用 /app/data 目录持久化存储
-    data_dir = '/app/data'
-    os.makedirs(data_dir, exist_ok=True)
-    db_path = os.path.join(data_dir, 'jiaxiao.db')
+    # 降级到 SQLite (本地开发)
+    if os.getenv('ENV') == 'development' or os.getenv('ENVIRONMENT') == 'development':
+        db_path = os.path.abspath('jiaxiao.db')
+    else:
+        # Zeabur: 使用 /app/data 目录持久化存储
+        data_dir = '/app/data'
+        os.makedirs(data_dir, exist_ok=True)
+        db_path = os.path.join(data_dir, 'jiaxiao.db')
 
-default_db = f'sqlite:///{db_path}'
-print(f"📊 数据库路径: {db_path}")
+    database_url = f'sqlite:///{db_path}'
+    print(f"📊 使用 SQLite: {db_path}")
 
-db = Database(default_db)
+db = Database(database_url)
 
 
 def init_db(database_url=None):
