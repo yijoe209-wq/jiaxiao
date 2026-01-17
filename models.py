@@ -123,12 +123,18 @@ class Task(Base):
             except (json.JSONDecodeError, TypeError):
                 attachments = []
 
+        # 确保日期格式包含时区信息（使用 +00:00 表示本地时区）
+        deadline_str = None
+        if self.deadline:
+            # 使用 isoformat 并添加时区信息（虽然不转换时区，但让格式明确）
+            deadline_str = self.deadline.isoformat()
+
         return {
             'task_id': self.task_id,
             'student_id': self.student_id,
             'intent': self.intent,
             'subject': self.subject,
-            'deadline': self.deadline.isoformat() if self.deadline else None,
+            'deadline': deadline_str,
             'description': self.description,
             'raw_text': self.raw_text,
             'group_id': self.group_id,

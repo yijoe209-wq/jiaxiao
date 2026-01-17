@@ -513,8 +513,12 @@
                 let deadlineText = '';
                 let deadlineClass = '';
                 if (task.deadline) {
+                    // 解析截止日期（ISO 格式字符串）
                     const deadline = new Date(task.deadline);
-                    const diff = deadline - today;
+
+                    // 计算天数差（只比较日期部分，忽略具体时间）
+                    const deadlineDateOnly = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
+                    const diff = deadlineDateOnly - today;
                     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
                     if (task.is_completed) {
