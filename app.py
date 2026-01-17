@@ -41,8 +41,13 @@ if os.getenv('ENV') == 'development' or os.getenv('ENVIRONMENT') == 'development
 else:
     UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/app/data/uploads')
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# 延迟创建上传目录（避免导入时创建失败）
+try:
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+except Exception as e:
+    logger.warning(f"创建上传目录失败: {e}")
+    logger.warning(f"将在运行时重试创建目录: {UPLOAD_FOLDER}")
 
 
 def allowed_file(filename):
@@ -709,6 +714,9 @@ def handle_image_message(wechat_id, original_id, pic_url):
         ext = '.jpg'  # 微信图片默认为 jpg
         filename = f"{uuid.uuid4().hex}{ext}"
         filepath = os.path.join(UPLOAD_FOLDER, filename)
+
+        # 确保上传目录存在
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
         # 保存图片
         with open(filepath, 'wb') as f:
@@ -1504,6 +1512,9 @@ def upload_file():
         filepath = os.path.join(UPLOAD_FOLDER, filename)
 
         logger.info(f'准备保存文件: {filename}, 大小: {file.content_length}')
+
+        # 确保上传目录存在
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
         file.save(filepath)
 
