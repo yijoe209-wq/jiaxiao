@@ -1439,6 +1439,38 @@ def complete_task(task_id):
         session.close()
 
 
+@app.route('/api/tasks/<task_id>', methods=['GET'])
+def get_task(task_id):
+    """获取单个任务的详细信息"""
+    family_id = get_current_family_id()
+
+    if not family_id:
+        return jsonify({'error': '未登录'}), 401
+
+    session = db.get_session()
+    try:
+        task = session.query(Task).filter_by(task_id=task_id).first()
+
+        if not task:
+            return jsonify({'error': '任务不存在'}), 404
+
+        # 验证任务所属学生是否属于当前家庭
+        student = session.query(Student).filter_by(
+            student_id=task.student_id
+        ).first()
+
+        if not student or student.family_id != family_id:
+            return jsonify({'error': '无权访问此任务'}), 403
+
+        return jsonify(task.to_dict())
+
+    except Exception as e:
+        logger.error(f"获取任务失败: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        session.close()
+
+
 @app.route('/api/tasks/<task_id>', methods=['PUT'])
 def update_task(task_id):
     """更新任务信息"""
