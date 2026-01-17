@@ -1057,10 +1057,13 @@ def get_current_user():
             session.close()
             return jsonify({'error': '用户不存在'}), 404
 
+
+        # 返回嵌套的 user 对象，与前端期望一致
         result = {
-            'family_id': family.family_id,
-            'email': family.email,
-            'parent_name': family.parent_name
+            'user': {
+                'parent_name': family.parent_name,
+                'email': family.email
+            }
         }
 
         session.close()
@@ -1363,44 +1366,6 @@ def get_all_tasks():
         session.close()
 
 
-@app.route('/api/tasks/<student_id>')
-def get_student_tasks(student_id):
-    """获取学生的任务列表"""
-    family_id = get_current_family_id()
-
-    if not family_id:
-        return jsonify({'error': '未登录'}), 401
-
-    session = db.get_session()
-    try:
-        # 验证学生是否属于当前家庭
-        student = session.query(Student).filter_by(
-            student_id=student_id
-        ).first()
-
-        if not student:
-            return jsonify({'error': '学生不存在'}), 404
-
-        if student.family_id != family_id:
-            return jsonify({'error': '无权访问此学生的任务'}), 403
-
-        # 返回所有任务（包括已完成），由前端过滤
-        tasks = session.query(Task).filter_by(
-            student_id=student_id
-        ).order_by(Task.created_at.desc()).all()
-
-        return jsonify({
-            'success': True,
-            'tasks': [task.to_dict() for task in tasks]
-        })
-
-    except Exception as e:
-        logger.error(f"获取任务列表失败: {e}")
-        return jsonify({'error': str(e)}), 500
-    finally:
-        session.close()
-
-
 @app.route('/api/tasks/<task_id>/complete', methods=['POST'])
 def complete_task(task_id):
     """标记任务完成"""
@@ -1474,6 +1439,7 @@ def get_task(task_id):
 @app.route('/api/tasks/<task_id>', methods=['PUT'])
 def update_task(task_id):
     """更新任务信息"""
+    from datetime import datetime
     family_id = get_current_family_id()
 
     if not family_id:
@@ -1505,7 +1471,6 @@ def update_task(task_id):
         if 'deadline' in data:
             if data['deadline']:
                 # 解析日期字符串
-                from datetime import datetime
                 task.deadline = datetime.strptime(data['deadline'], '%Y-%m-%d')
             else:
                 task.deadline = None
@@ -1640,6 +1605,46 @@ def not_found(error):
 def internal_error(error):
     logger.error(f"Internal server error: {error}")
     return jsonify({'error': 'Internal server error'}), 500
+
+
+# ========== 学生任务路由（放在最后以避免路由冲突） ==========
+
+@app.route('/api/tasks/<student_id>')
+def get_student_tasks(student_id):
+    """获取学生的任务列表"""
+    family_id = get_current_family_id()
+
+    if not family_id:
+        return jsonify({'error': '未登录'}), 401
+
+    session = db.get_session()
+    try:
+        # 验证学生是否属于当前家庭
+        student = session.query(Student).filter_by(
+            student_id=student_id
+        ).first()
+
+        if not student:
+            return jsonify({'error': '学生不存在'}), 404
+
+        if student.family_id != family_id:
+            return jsonify({'error': '无权访问此学生的任务'}), 403
+
+        # 返回所有任务（包括已完成），由前端过滤
+        tasks = session.query(Task).filter_by(
+            student_id=student_id
+        ).order_by(Task.created_at.desc()).all()
+
+        return jsonify({
+            'success': True,
+            'tasks': [task.to_dict() for task in tasks]
+        })
+
+    except Exception as e:
+        logger.error(f"获取任务列表失败: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        session.close()
 
 
 # ========== 启动入口 ==========

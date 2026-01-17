@@ -649,8 +649,8 @@
                 const data = await response.json();
                 const userNameEl = document.getElementById('userName');
                 if (userNameEl) {
-                    if (data.parent_name) {
-                        userNameEl.textContent = data.parent_name;
+                    if (data.user && data.user.parent_name) {
+                        userNameEl.textContent = data.user.parent_name;
                     } else {
                         userNameEl.textContent = '未登录';
                         console.warn('API返回数据中没有parent_name字段:', data);

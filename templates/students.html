@@ -412,22 +412,28 @@
         const API_BASE = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
         let currentEditStudentId = null;
 
-        // 检查登录状态
-        function checkLogin() {
-            const family_id = localStorage.getItem('family_id');
-            if (!family_id) {
-                alert('请先登录');
+        // 检查登录状态（通过API）
+        async function checkLogin() {
+            try {
+                const response = await fetch(API_BASE + '/api/auth/check');
+                const data = await response.json();
+
+                if (!data.loggedIn) {
+                    window.location.href = '/login';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('登录检查失败:', error);
                 window.location.href = '/login';
                 return false;
             }
-            return family_id;
         }
 
-        // 获取请求头（包含认证信息）
+        // 获取请求头（不需要自定义头，session cookie自动发送）
         function getHeaders() {
             return {
-                'Content-Type': 'application/json',
-                'X-Family-ID': checkLogin()
+                'Content-Type': 'application/json'
             };
         }
 
@@ -441,7 +447,6 @@
 
                 if (response.status === 401) {
                     alert('登录已过期，请重新登录');
-                    localStorage.clear();
                     window.location.href = '/login';
                     return;
                 }
@@ -587,7 +592,12 @@
         }
 
         // 页面加载时获取学生列表
-        loadStudents();
+        (async function init() {
+            const isLoggedIn = await checkLogin();
+            if (isLoggedIn) {
+                await loadStudents();
+            }
+        })();
     </script>
 </body>
 </html>
