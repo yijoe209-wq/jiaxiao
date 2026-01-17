@@ -643,16 +643,25 @@
             try {
                 const response = await fetch('/api/me');
                 if (!response.ok) {
-                    console.error('加载用户信息失败');
+                    console.error('加载用户信息失败，状态码:', response.status);
                     return;
                 }
                 const data = await response.json();
                 const userNameEl = document.getElementById('userName');
-                if (userNameEl && data.parent_name) {
-                    userNameEl.textContent = data.parent_name;
+                if (userNameEl) {
+                    if (data.parent_name) {
+                        userNameEl.textContent = data.parent_name;
+                    } else {
+                        userNameEl.textContent = '未登录';
+                        console.warn('API返回数据中没有parent_name字段:', data);
+                    }
                 }
             } catch (error) {
                 console.error('加载用户信息失败:', error);
+                const userNameEl = document.getElementById('userName');
+                if (userNameEl) {
+                    userNameEl.textContent = '加载失败';
+                }
             }
         }
 

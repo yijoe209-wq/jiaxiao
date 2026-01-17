@@ -108,6 +108,15 @@ def logout_page():
     return redirect('/login')
 
 
+@app.route('/edit-task/<task_id>')
+def edit_task_page(task_id):
+    """编辑任务页面"""
+    family_id = get_current_family_id()
+    if not family_id:
+        return redirect('/login')
+    return render_template('edit-task.html', task_id=task_id)
+
+
 @app.route('/confirm')
 def confirm_page():
     """任务确认页面（微信内打开）"""
@@ -132,7 +141,7 @@ def wechat_auth():
         return redirect(f'/confirm?pending_id={pending_id}')
 
     # 构建 OAuth2.0 授权 URL
-    redirect_uri = quote(f"https://achievement-senior-any-manchester.trycloudflare.com/wechat-auth?pending_id={pending_id}")
+    redirect_uri = quote(f"${Config.SERVER_URL}/wechat-auth?pending_id={pending_id}")
     auth_url = (
         f"https://open.weixin.qq.com/connect/oauth2/authorize?"
         f"appid={Config.WECHAT_APP_ID}&"
@@ -430,7 +439,7 @@ def handle_view_tasks_command(wechat_id, original_id):
         lines.append("")
         lines.append("👉 点击下方链接直接在微信内确认:")
         # 使用微信网页授权链接
-        auth_url = f"https://achievement-senior-any-manchester.trycloudflare.com/wechat-auth?pending_id={pending_id}"
+        auth_url = f"${Config.SERVER_URL}/wechat-auth?pending_id={pending_id}"
         lines.append(f"<a href='{auth_url}'>📱 点此查看并确认任务</a>")
         lines.append("")
         lines.append("💡 点击链接后可以:")
@@ -484,7 +493,7 @@ def handle_confirm_latest_command(wechat_id, original_id):
             return build_xml_response(
                 wechat_id,
                 original_id,
-                "❌ 未找到学生信息\n\n💡 请先在网页版添加学生：\nhttps://achievement-senior-any-manchester.trycloudflare.com/tasks"
+                "❌ 未找到学生信息\n\n💡 请先在网页版添加学生：\n${Config.SERVER_URL}/tasks"
             )
 
         # 构建确认消息
@@ -564,7 +573,7 @@ def handle_help_command(wechat_id, original_id):
 • 支持：语文、数学、英语等
 
 🔗 网页版：
-https://achievement-senior-any-manchester.trycloudflare.com/tasks"""
+${Config.SERVER_URL}/tasks"""
 
     return build_xml_response(wechat_id, original_id, help_text)
 
@@ -765,8 +774,8 @@ def build_confirm_message(result, pending_id):
     Returns:
         str: 确认消息文本
     """
-    # 使用 Cloudflare Tunnel 外网地址（微信可访问）
-    host_url = "https://achievement-senior-any-manchester.trycloudflare.com"
+    # 使用环境变量中的服务器地址
+    host_url = Config.SERVER_URL
 
     # 生成确认链接
     confirm_url = f"{host_url}/confirm?pending_id={pending_id}"

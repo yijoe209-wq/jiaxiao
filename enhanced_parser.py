@@ -127,8 +127,9 @@ class EnhancedParser:
    - 其他：无法归类的任务
 
 4. **deadline（截止时间）**：
-   - 提取明确的日期（如"明天"、"1月15日"、"周三"）
-   - 如果没有提到时间，返回 null
+   - 提取明确的日期（如"明天"、"1月15日"、"周三"、"明天前"、"后天前"、"本周内"等）
+   - 如果消息中有时间相关词语但无法确定具体日期，提取相对时间（如"明天前"→明天，"后天前"→后天）
+   - 如果完全没有提到时间，返回 null
 
 **示例**：
 
@@ -166,6 +167,19 @@ class EnhancedParser:
   "type": "single",
   "tasks": [
     {"sequence": 1, "subject": "语文", "task_type": "背诵", "description": "完成《春晓》背诵", "details": "完成《春晓》背诵，明天检查", "deadline": "明天"}
+  ],
+  "total": 1
+}
+
+输入：
+"英语作业：完成第3单元单词练习，每个单词写5遍，明天前提交"
+
+输出：
+{
+  "intent": "assignment",
+  "type": "single",
+  "tasks": [
+    {"sequence": 1, "subject": "英语", "task_type": "书写", "description": "第3单元单词练习，每个单词写5遍", "details": "英语作业：完成第3单元单词练习，每个单词写5遍，明天前提交", "deadline": "明天"}
   ],
   "total": 1
 }
