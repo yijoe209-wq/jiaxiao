@@ -71,3 +71,6 @@ htmlcov/
 # 开发文件
 *_dev.db*
 test-output.log
+
+# Screenshots
+screenshot*.png
