@@ -229,22 +229,23 @@
     <!-- 主内容区 -->
     <main class="max-w-2xl mx-auto px-6 py-8">
         <!-- 统计卡片 - 日式极简风格 -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-            <div class="bg-white border border-gray-100 rounded-3xl p-8 text-center hover:border-gray-200 transition-colors cursor-pointer">
-                <p class="stat-number" id="urgentCount">-</p>
-                <p class="stat-label">紧急</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+            <!-- 警告卡片 -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-8 text-center hover:border-gray-300 transition-all cursor-pointer" onclick="setQuickFilter('week')">
+                <p class="stat-number" style="font-size: 48px; font-weight: 300; color: #1a1a1a; line-height: 1;" id="warningCount">-</p>
+                <p class="stat-label" style="font-size: 11px; color: #999999; letter-spacing: 2px; text-transform: uppercase; margin-top: 8px;">本周</p>
             </div>
-            <div class="bg-white border border-gray-100 rounded-3xl p-8 text-center hover:border-gray-200 transition-colors cursor-pointer">
-                <p class="stat-number" id="warningCount">-</p>
-                <p class="stat-label">警告</p>
+
+            <!-- 待办卡片 -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-8 text-center hover:border-gray-300 transition-all cursor-pointer" onclick="setQuickFilter('pending')">
+                <p class="stat-number" style="font-size: 48px; font-weight: 300; color: #1a1a1a; line-height: 1;" id="pendingCount">-</p>
+                <p class="stat-label" style="font-size: 11px; color: #999999; letter-spacing: 2px; text-transform: uppercase; margin-top: 8px;">待办</p>
             </div>
-            <div class="bg-white border border-gray-100 rounded-3xl p-8 text-center hover:border-gray-200 transition-colors cursor-pointer">
-                <p class="stat-number" id="pendingCount">-</p>
-                <p class="stat-label">待办</p>
-            </div>
-            <div class="bg-white border border-gray-100 rounded-3xl p-8 text-center hover:border-gray-200 transition-colors cursor-pointer">
-                <p class="stat-number" id="completedCount">-</p>
-                <p class="stat-label">完成</p>
+
+            <!-- 完成卡片 -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-8 text-center hover:border-gray-300 transition-all cursor-pointer" onclick="setQuickFilter('completed')">
+                <p class="stat-number" style="font-size: 48px; font-weight: 300; color: #1a1a1a; line-height: 1;" id="completedCount">-</p>
+                <p class="stat-label" style="font-size: 11px; color: #999999; letter-spacing: 2px; text-transform: uppercase; margin-top: 8px;">完成</p>
             </div>
         </div>
 
@@ -374,6 +375,10 @@
                 console.log('📊 加载任务数量:', tasks.length);
                 allTasks = tasks;
                 updateStatistics();
+
+                // 填充科目筛选器
+                populateSubjectFilter();
+
                 renderTasks();
             } catch (error) {
                 console.error('❌ 加载任务失败:', error);
@@ -391,6 +396,19 @@
             }
         }
 
+        // 填充科目筛选器
+        function populateSubjectFilter() {
+            const subjects = [...new Set(allTasks.map(t => t.subject).filter(Boolean))];
+            const subjectSelect = document.getElementById('subjectFilter');
+            subjectSelect.innerHTML = '<option value="all">全部科目</option>';
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject;
+                option.textContent = subject;
+                subjectSelect.appendChild(option);
+            });
+        }
+
         // 更新统计数据
         function updateStatistics() {
             const now = new Date();
@@ -400,11 +418,9 @@
             const weekEnd = new Date(today);
             weekEnd.setDate(weekEnd.getDate() + 7);
 
-            let urgentCount = 0;
             let warningCount = 0;
             let pendingCount = 0;
             let completedCount = 0;
-            let todayCount = 0;
             let weekCount = 0;
             let overdueCount = 0;
 
@@ -416,11 +432,7 @@
                     if (task.deadline) {
                         const deadline = new Date(task.deadline);
                         if (deadline < today) {
-                            urgentCount++;
                             overdueCount++;
-                        } else if (deadline < tomorrow) {
-                            urgentCount++;
-                            todayCount++;
                         } else if (deadline < weekEnd) {
                             warningCount++;
                             weekCount++;
@@ -429,14 +441,11 @@
                 }
             });
 
-            document.getElementById('urgentCount').textContent = urgentCount;
             document.getElementById('warningCount').textContent = warningCount;
             document.getElementById('pendingCount').textContent = pendingCount;
             document.getElementById('completedCount').textContent = completedCount;
-            document.getElementById('todayBadge').textContent = todayCount;
             document.getElementById('weekBadge').textContent = weekCount;
             document.getElementById('overdueBadge').textContent = overdueCount;
-            document.getElementById('pendingBadge').textContent = pendingCount;
         }
 
         // 渲染任务列表

@@ -26,6 +26,7 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = False  # 开发环境使用HTTP，生产环境应使用True
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 7  # 7 days
+app.config['TEMPLATES_AUTO_RELOAD'] = True  # 开发环境自动重载模板
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 最大上传 16MB
 
 # 初始化指标中间件
