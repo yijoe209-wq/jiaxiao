@@ -42,10 +42,45 @@
 
         .task-card {
             background: white;
-            border: 1px solid #f0f0f0;
+            border: 2px solid #e5e5e5;
             border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .task-card:hover {
+            border-color: #1a1a1a;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #1a1a1a;
+            color: white;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 12px;
+        }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .task-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
         }
 
         .btn-primary {
@@ -333,6 +368,12 @@
 
                 return `
                     <div class="task-card animate-slide-up" data-index="${index}" style="animation-delay: ${index * 0.1}s">
+                        <!-- 任务头部：序号和标题 -->
+                        <div class="task-header">
+                            <div class="task-number">${index + 1}</div>
+                            <div class="task-title">任务 ${index + 1}</div>
+                        </div>
+
                         <!-- 科目标签 -->
                         <div class="flex items-center gap-2 mb-3">
                             <span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">${subject}</span>

@@ -23,6 +23,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-i
 app.config['SESSION_COOKIE_PATH'] = '/'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = False  # 开发环境使用HTTP，生产环境应使用True
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 7  # 7 days
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 最大上传 16MB
@@ -987,6 +988,7 @@ def register():
         flask_session['family_id'] = family_id
         flask_session['parent_name'] = parent_name
         flask_session.permanent = True
+        flask_session.modified = True  # 确保session被保存
 
         logger.info(f"新家庭注册: email={email}, name={parent_name}")
         return jsonify({
@@ -1026,6 +1028,7 @@ def login():
         flask_session['family_id'] = family.family_id
         flask_session['parent_name'] = family.parent_name
         flask_session.permanent = True  # 持久化 session
+        flask_session.modified = True  # 确保session被保存
 
         logger.info(f"用户登录成功: email={email}, family_id={family.family_id}")
 
@@ -1487,8 +1490,52 @@ def update_task(task_id):
         })
 
     except Exception as e:
-        session.rollback()
         logger.error(f"更新任务失败: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+    finally:
+        session.close()
+
+
+@app.route('/api/tasks/<task_id>', methods=['DELETE'])
+def delete_task(task_id):
+    """删除任务"""
+    family_id = get_current_family_id()
+
+    if not family_id:
+        return jsonify({'error': '未登录'}), 401
+
+    session = db.get_session()
+    try:
+        task = session.query(Task).filter_by(task_id=task_id).first()
+
+        if not task:
+            return jsonify({'error': '任务不存在'}), 404
+
+        # 验证任务所属学生是否属于当前家庭
+        student = session.query(Student).filter_by(
+            student_id=task.student_id
+        ).first()
+
+        if not student or student.family_id != family_id:
+            return jsonify({'error': '无权操作此任务'}), 403
+
+        # 记录任务ID用于日志
+        task_info = {'task_id': task_id, 'description': task.description}
+
+        # 删除任务
+        session.delete(task)
+        session.commit()
+
+        logger.log_message('task_deleted', task_info)
+
+        return jsonify({
+            'success': True,
+            'message': '任务已删除'
+        })
+
+    except Exception as e:
+        session.rollback()
+        logger.error(f"删除任务失败: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
     finally:
         session.close()

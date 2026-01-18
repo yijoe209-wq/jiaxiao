@@ -316,11 +316,8 @@ option value="科学">科学</option>
             if (description) data.description = description;
             if (subject) data.subject = subject;
             if (deadline) {
-                // 转换日期格式
-                const date = new Date(deadline);
-                // 设置为当天 23:59:59
-                const deadlineDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59);
-                data.deadline = deadlineDate.toISOString();
+                // 只发送日期部分 YYYY-MM-DD，后端会自动设置为23:59:59
+                data.deadline = deadline;
             }
 
             try {
