@@ -34,13 +34,19 @@
         body {
             font-family: 'Noto Sans SC', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: var(--zen-page-bg);
-            padding: 20px;
+            padding: 16px;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 300;
             -webkit-font-smoothing: antialiased;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
         }
 
         .container {
@@ -50,14 +56,27 @@
 
         .card {
             background: var(--zen-bg);
-            padding: 48px 40px;
+            padding: 40px 32px;
             border-radius: 24px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04);
         }
 
+        @media (max-width: 480px) {
+            .card {
+                padding: 32px 24px;
+                border-radius: 20px;
+            }
+        }
+
         .logo {
             text-align: center;
-            margin-bottom: 48px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                margin-bottom: 32px;
+            }
         }
 
         .logo h1 {
@@ -68,11 +87,23 @@
             letter-spacing: -0.5px;
         }
 
+        @media (max-width: 480px) {
+            .logo h1 {
+                font-size: 28px;
+            }
+        }
+
         .logo p {
             font-size: 13px;
             font-weight: 300;
             color: var(--zen-text-light);
             letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 480px) {
+            .logo p {
+                font-size: 12px;
+            }
         }
 
         .tabs {
@@ -81,6 +112,12 @@
             background: var(--zen-border);
             border-radius: 12px;
             padding: 4px;
+        }
+
+        @media (max-width: 480px) {
+            .tabs {
+                margin-bottom: 24px;
+            }
         }
 
         .tab {
@@ -96,6 +133,13 @@
             letter-spacing: 0.5px;
         }
 
+        @media (max-width: 480px) {
+            .tab {
+                font-size: 13px;
+                padding: 10px;
+            }
+        }
+
         .tab.active {
             background: var(--zen-bg);
             color: var(--zen-text);
@@ -107,6 +151,12 @@
             margin-bottom: 20px;
         }
 
+        @media (max-width: 480px) {
+            .form-group {
+                margin-bottom: 16px;
+            }
+        }
+
         .form-group label {
             display: block;
             font-size: 13px;
@@ -114,6 +164,13 @@
             margin-bottom: 8px;
             font-weight: 400;
             letter-spacing: 0.3px;
+        }
+
+        @media (max-width: 480px) {
+            .form-group label {
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
         }
 
         .form-group input {
@@ -127,6 +184,14 @@
             transition: all 0.2s ease;
             background: var(--zen-bg);
             color: var(--zen-text);
+        }
+
+        @media (max-width: 480px) {
+            .form-group input {
+                padding: 12px 14px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
         }
 
         .form-group input:focus {
@@ -153,6 +218,14 @@
             margin-top: 8px;
             transition: all 0.2s ease;
             letter-spacing: 0.3px;
+        }
+
+        @media (max-width: 480px) {
+            .btn {
+                padding: 14px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
         }
 
         .btn:hover {

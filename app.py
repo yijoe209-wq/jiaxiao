@@ -23,7 +23,11 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-i
 app.config['SESSION_COOKIE_PATH'] = '/'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = False  # 开发环境使用HTTP，生产环境应使用True
+# 根据环境自动设置SESSION_COOKIE_SECURE
+# 生产环境(HTTPS)需要设置为True，开发环境(HTTP)设置为False
+is_production = os.getenv('ENV') == 'production' or os.getenv('ENVIRONMENT') == 'production'
+app.config['SESSION_COOKIE_SECURE'] = is_production
+logger.info(f"环境检测: is_production={is_production}, SESSION_COOKIE_SECURE={is_production}")
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 7  # 7 days
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # 开发环境自动重载模板
