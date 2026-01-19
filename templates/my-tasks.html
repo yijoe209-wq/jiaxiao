@@ -194,6 +194,123 @@
         .loading {
             animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
+
+        /* 手机端响应式优化 */
+        @media (max-width: 640px) {
+            /* 导航栏优化 */
+            nav > div {
+                padding: 12px 16px !important;
+            }
+
+            nav h1 {
+                font-size: 18px !important;
+            }
+
+            /* 隐藏部分导航元素 */
+            nav .w-px {
+                display: none;
+            }
+
+            nav a[href="/students"] {
+                display: none;
+            }
+
+            /* 简化用户信息 */
+            #userName {
+                max-width: 80px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            /* 简化添加任务按钮 */
+            nav a[href="/add"] {
+                padding: 8px 12px !important;
+                font-size: 13px !important;
+            }
+
+            nav a[href="/add"] svg {
+                margin-right: 2px !important;
+            }
+
+            nav button {
+                font-size: 13px !important;
+            }
+
+            /* 主内容区padding */
+            main {
+                padding: 24px 16px !important;
+            }
+
+            /* 统计卡片优化 */
+            .grid > div {
+                padding: 24px 16px !important;
+                border-radius: 16px !important;
+            }
+
+            .stat-number {
+                font-size: 36px !important;
+            }
+
+            .stat-label {
+                font-size: 10px !important;
+                letter-spacing: 1px !important;
+                margin-top: 6px !important;
+            }
+
+            /* 筛选区域优化 */
+            .bg-white.border.rounded-2xl {
+                padding: 16px !important;
+                border-radius: 16px !important;
+            }
+
+            /* 下拉筛选垂直布局 */
+            .flex.flex-wrap.gap-4.mb-6 {
+                flex-direction: column !important;
+                gap: 12px !important;
+                padding-bottom: 16px !important;
+            }
+
+            .flex.items-center.gap-2 {
+                justify-content: space-between;
+            }
+
+            .flex.items-center.gap-2 label {
+                flex-shrink: 0;
+                margin-right: 12px;
+            }
+
+            .flex.items-center.gap-2 select {
+                flex: 1;
+                padding: 8px 12px !important;
+                font-size: 14px !important;
+            }
+
+            /* 快速筛选按钮 */
+            .filter-btn {
+                padding: 6px 12px !important;
+                font-size: 12px !important;
+            }
+
+            /* 任务项优化 */
+            .task-item {
+                padding: 16px !important;
+            }
+
+            .task-item p {
+                font-size: 14px !important;
+            }
+
+            .task-item .flex.items-center.gap-3 {
+                font-size: 12px !important;
+                flex-wrap: wrap;
+            }
+
+            /* 图标按钮 */
+            .task-item button {
+                padding: 8px !important;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen">
