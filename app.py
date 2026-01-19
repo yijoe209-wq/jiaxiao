@@ -2,7 +2,8 @@
 Flask 主应用
 微信服务器接入、API 接口、健康检查
 """
-from flask import Flask, request, jsonify, render_template, redirect
+from flask import Flask, request, jsonify, render_template, redirect, session as flask_session
+from flask_session import Session  # 服务端session支持
 from werkzeug.utils import secure_filename
 from lxml import etree
 from datetime import datetime
@@ -25,16 +26,41 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 # 根据环境自动设置SESSION_COOKIE_SECURE
 # 生产环境(HTTPS)需要设置为True，开发环境(HTTP)设置为False
-is_production = os.getenv('ENV') == 'production' or os.getenv('ENVIRONMENT') == 'production'
-app.config['SESSION_COOKIE_SECURE'] = is_production
-logger.info(f"环境检测: is_production={is_production}, SESSION_COOKIE_SECURE={is_production}")
+# 方案：优先使用环境变量，如果未设置则在第一个请求时根据scheme动态设置
+app.config['SESSION_COOKIE_SECURE'] = os.getenv('ENV') == 'production' or os.getenv('ENVIRONMENT') == 'production'
+logger.info(f"初始配置: SESSION_COOKIE_SECURE={app.config['SESSION_COOKIE_SECURE']}")
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 7  # 7 days
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # 开发环境自动重载模板
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 最大上传 16MB
 
+# Flask-Session 配置（服务端session）
+app.config['SESSION_TYPE'] = 'filesystem'  # 使用文件系统存储session
+app.config['SESSION_FILE_DIR'] = './flask_session'  # session文件存储目录
+app.config['SESSION_FILE_THRESHOLD'] = 500  # session文件数量阈值
+
+# 初始化Flask-Session
+Session(app)
+
 # 初始化指标中间件
 MetricMiddleware(app)
+
+# 启动时检查配置
+@app.before_request
+def check_config():
+    """检查配置并警告"""
+    # 只在第一次请求时检查
+    if not hasattr(app, '_config_checked'):
+        app._config_checked = True
+
+        # 检查是否为HTTPS但SESSION_COOKIE_SECURE=False
+        is_https = request.scheme == 'https' or request.headers.get('X-Forwarded-Proto') == 'https'
+        if is_https and not app.config.get('SESSION_COOKIE_SECURE'):
+            logger.warning("="*60)
+            logger.warning("⚠️  检测到HTTPS环境但SESSION_COOKIE_SECURE=False")
+            logger.warning("⚠️  这会导致cookie无法被浏览器保存！")
+            logger.warning("⚠️  请设置环境变量: ENV=production")
+            logger.warning("="*60)
 
 # 初始化数据库
 init_db(Config.DATABASE_URL)
@@ -111,6 +137,9 @@ def login_page():
 @app.route('/logout')
 def logout_page():
     """退出登录"""
+    # 清除Flask session
+    flask_session.clear()
+    logger.info("用户退出登录")
     return redirect('/login')
 
 
@@ -940,7 +969,6 @@ def hash_password(password):
 
 def get_current_family_id():
     """获取当前登录用户的 family_id（从 Flask session）"""
-    from flask import session as flask_session
     family_id = flask_session.get('family_id')
 
     if not family_id:
@@ -989,7 +1017,6 @@ def register():
         session.close()
 
         # 设置会话（自动登录）
-        from flask import session as flask_session
         flask_session['family_id'] = family_id
         flask_session['parent_name'] = parent_name
         flask_session.permanent = True
@@ -1029,7 +1056,6 @@ def login():
         session.close()
 
         # 设置会话（使用 Flask session）
-        from flask import session as flask_session
         flask_session['family_id'] = family.family_id
         flask_session['parent_name'] = family.parent_name
         flask_session.permanent = True  # 持久化 session
@@ -1089,7 +1115,6 @@ def check_auth():
     """检查用户登录状态"""
     try:
         # 从 session 中获取 family_id
-        from flask import session as flask_session
         family_id = flask_session.get('family_id')
 
         if not family_id:

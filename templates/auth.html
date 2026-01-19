@@ -362,22 +362,29 @@
             const password = document.getElementById('loginPassword').value;
 
             try {
+                console.log('📤 开始登录请求...');
                 const response = await fetch(API_BASE + '/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
 
+                console.log('📥 收到响应，状态码:', response.status);
                 const result = await response.json();
+                console.log('📦 响应数据:', result);
+                console.log('✅ result.success:', result.success);
 
                 if (result.success) {
+                    console.log('🎯 登录成功，准备跳转到 /my-tasks');
                     // 跳转到任务中心（后端已设置session cookie）
                     window.location.href = '/my-tasks';
+                    console.log('🚀 已执行跳转命令');
                 } else {
+                    console.log('❌ 登录失败:', result.error);
                     showError(result.error || '登录失败');
                 }
             } catch (error) {
-                console.error('登录失败:', error);
+                console.error('💥 登录异常:', error);
                 showError('登录失败，请稍后重试');
             }
         }

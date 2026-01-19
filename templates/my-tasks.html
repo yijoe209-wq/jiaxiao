@@ -207,12 +207,12 @@
             }
 
             /* 隐藏部分导航元素 */
-            nav .w-px {
-                display: none;
+            nav .w-px, nav .w-px.h-4.bg-gray-200 {
+                display: none !important;
             }
 
             nav a[href="/students"] {
-                display: none;
+                display: none !important;
             }
 
             /* 简化用户信息 */
@@ -796,6 +796,10 @@
             const authenticated = await checkAuth();
             if (authenticated) {
                 await Promise.all([loadUserInfo(), loadStudents(), loadTasks()]);
+            } else {
+                // 未登录，跳转到登录页
+                console.log('未登录，跳转到登录页');
+                window.location.href = '/login';
             }
         });
     </script>
