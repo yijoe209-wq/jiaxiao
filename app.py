@@ -35,9 +35,19 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True  # 开发环境自动重载模板
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 最大上传 16MB
 
 # Flask-Session 配置（服务端session）
-app.config['SESSION_TYPE'] = 'filesystem'  # 使用文件系统存储session
-app.config['SESSION_FILE_DIR'] = './flask_session'  # session文件存储目录
-app.config['SESSION_FILE_THRESHOLD'] = 500  # session文件数量阈值
+# 根据环境选择session存储方式
+if os.getenv('ENV') == 'production' or os.getenv('ENVIRONMENT') == 'production':
+    # 生产环境：使用持久化存储目录
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.config['SESSION_FILE_DIR'] = os.getenv('SESSION_FILE_DIR', '/app/data/flask_session')
+else:
+    # 开发环境：使用本地目录
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.config['SESSION_FILE_DIR'] = './flask_session'
+
+app.config['SESSION_FILE_THRESHOLD'] = 500
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 # 初始化Flask-Session
 Session(app)
@@ -80,6 +90,16 @@ try:
 except Exception as e:
     logger.warning(f"创建上传目录失败: {e}")
     logger.warning(f"将在运行时重试创建目录: {UPLOAD_FOLDER}")
+
+# 创建session存储目录
+try:
+    session_dir = app.config.get('SESSION_FILE_DIR')
+    if session_dir and not os.path.exists(session_dir):
+        os.makedirs(session_dir, exist_ok=True)
+        logger.info(f"创建session存储目录: {session_dir}")
+except Exception as e:
+    logger.warning(f"创建session目录失败: {e}")
+    logger.warning(f"session功能可能无法正常工作")
 
 
 def allowed_file(filename):
