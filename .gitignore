@@ -52,6 +52,14 @@ env/
 # Node modules
 node_modules/
 
+# Capacitor (已移除，使用 PWA 方案)
+# .capacitor/
+# android/
+# ios/
+
+# Flask session
+flask_session/
+
 # Test results and uploads
 playwright-report/
 test-results/

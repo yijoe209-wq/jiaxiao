@@ -1,0 +1,42 @@
+{
+  "name": "家校任务助手",
+  "short_name": "家校助手",
+  "description": "家校任务管理助手 - 智能解析作业，轻松管理任务",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a1a1a",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "shortcuts": [
+    {
+      "name": "添加任务",
+      "short_name": "添加",
+      "description": "快速添加新任务",
+      "url": "/add",
+      "icons": [{ "src": "/static/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "我的任务",
+      "short_name": "任务",
+      "description": "查看我的所有任务",
+      "url": "/",
+      "icons": [{ "src": "/static/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

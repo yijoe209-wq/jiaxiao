@@ -1,0 +1,26 @@
+# Zeabur 部署配置
+# 自动部署到 Zeabur 平台
+
+# 项目名称
+projectName: jiaxiao-task
+
+# 服务配置
+services:
+  - type: static
+    name: jiaxiao-web
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 4 -b 0.0.0.0:$PORT app:app
+    env:
+      - KEY = ENV
+        VALUE = production
+      - KEY = PYTHON_VERSION
+        VALUE = 3.12
+    volumes:
+      - path: /app/data
+        name: uploads
+
+# 环境变量说明（需要在 Zeabur 控制台配置）：
+# DATABASE_URL: PostgreSQL 连接字符串
+# LLM_API_KEY: DeepSeek API 密钥
+# SECRET_KEY: Flask session 密钥
+# SERVER_URL: 部署后的公网地址（用于 Capacitor app 访问）

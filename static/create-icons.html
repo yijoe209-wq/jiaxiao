@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>PWA 图标生成器</title>
+</head>
+<body>
+    <h1>PWA 图标生成器</h1>
+    <p>将此页面在浏览器中打开，它会自动从 SVG 生成 PNG 图标。</p>
+    <canvas id="canvas192" width="192" height="192"></canvas>
+    <canvas id="canvas512" width="512" height="512"></canvas>
+
+    <img id="source" src="capacitor-assets/icon.svg" style="display:none;" onload="generateIcons()">
+
+    <script>
+        function generateIcons() {
+            const svg = document.getElementById('source');
+            const canvas192 = document.getElementById('canvas192');
+            const ctx192 = canvas192.getContext('2d');
+            const canvas512 = document.getElementById('canvas512');
+            const ctx512 = canvas512.getContext('2d');
+
+            const img = new Image();
+            img.onload = function() {
+                // 192x192
+                ctx192.drawImage(img, 0, 0, 192, 192);
+                const link192 = document.createElement('a');
+                link192.download = 'icon-192.png';
+                link192.href = canvas192.toDataURL();
+                link192.click();
+
+                // 512x512
+                ctx512.drawImage(img, 0, 0, 512, 512);
+                const link512 = document.createElement('a');
+                link512.download = 'icon-512.png';
+                link512.href = canvas512.toDataURL();
+                link512.click();
+
+                alert('图标已生成！请将下载的文件放到 static/ 目录');
+            };
+            img.src = svg.src;
+        }
+    </script>
+</body>
+</html>
