@@ -348,6 +348,12 @@
                     </svg>
                     添加任务
                 </a>
+                <a href="/family-members" class="text-sm text-gray-900 hover:text-gray-600 transition-colors flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    家庭成员
+                </a>
                 <a href="/students" class="text-sm text-gray-900 hover:text-gray-600 transition-colors">学生</a>
                 <button onclick="logout()" class="text-sm text-gray-900 hover:text-gray-600 transition-colors">退出</button>
             </div>
@@ -501,6 +507,15 @@
 
                 const tasks = await response.json();
                 console.log('📊 加载任务数量:', tasks.length);
+
+                // 检查任务数据是否包含学生信息
+                const tasksWithStudent = tasks.filter(t => t.student && t.student.name);
+                console.log('✅ 包含学生信息的任务数:', tasksWithStudent.length, '/', tasks.length);
+
+                if (tasksWithStudent.length < tasks.length) {
+                    console.warn('⚠️ 部分任务缺少学生信息，将从缓存中查找');
+                }
+
                 allTasks = tasks;
                 updateStatistics();
 
@@ -644,8 +659,24 @@
 
             // 渲染任务
             container.innerHTML = filteredTasks.map(task => {
-                const student = allStudents.find(s => s.student_id === task.student_id);
-                const studentName = student ? student.name : '未知学生';
+                // 优先使用 API 返回的学生信息，如果没有则从缓存中查找
+                let studentName = '未知学生';
+                if (task.student && task.student.name) {
+                    studentName = task.student.name;
+                } else {
+                    const student = allStudents.find(s => s.student_id === task.student_id);
+                    if (student) {
+                        studentName = student.name;
+                    } else {
+                        // 如果都找不到，记录警告
+                        console.warn('⚠️ 任务学生信息缺失:', {
+                            task_id: task.task_id,
+                            student_id: task.student_id,
+                            has_student_in_api: !!task.student,
+                            all_students_count: allStudents.length
+                        });
+                    }
+                }
 
                 let deadlineText = '';
                 let deadlineClass = '';

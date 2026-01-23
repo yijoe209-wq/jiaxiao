@@ -129,6 +129,15 @@ def my_tasks_page():
     return redirect('/')
 
 
+@app.route('/family-members')
+def family_members_page():
+    """家庭成员管理页面"""
+    family_id = get_current_family_id()
+    if not family_id:
+        return redirect('/login')
+    return render_template('family-members.html')
+
+
 @app.route('/students')
 def students_page():
     """学生管理页面"""
@@ -989,7 +998,7 @@ def get_current_family_id():
 
 @app.route('/api/register', methods=['POST'])
 def register():
-    """家长注册"""
+    """家长注册 - 创建家庭和第一个家长"""
     try:
         data = request.json
         email = data.get('email', '').strip().lower()
@@ -1008,35 +1017,48 @@ def register():
 
         session = db.get_session()
 
-        # 检查邮箱是否已注册
-        existing = session.query(Family).filter_by(email=email).first()
+        # 检查邮箱是否已注册（在 parents 表中检查）
+        from models import Parent
+        existing = session.query(Parent).filter_by(email=email).first()
         if existing:
             session.close()
             return jsonify({'error': '该邮箱已注册'}), 400
 
         # 创建家庭
-        family = Family(
+        family = Family()
+        session.add(family)
+        session.flush()  # 获取 family_id
+
+        #创建家长（admin 角色）
+        parent = Parent(
+            family_id=family.family_id,
             email=email,
             password=hash_password(password),
-            parent_name=parent_name
+            name=parent_name,
+            role='admin'  # 第一个注册的家长是管理员
         )
-        session.add(family)
+        session.add(parent)
         session.commit()
 
         family_id = family.family_id
+        parent_id = parent.parent_id
         session.close()
 
         # 设置会话（自动登录）
         flask_session['family_id'] = family_id
+        flask_session['parent_id'] = parent_id
         flask_session['parent_name'] = parent_name
+        flask_session['role'] = 'admin'
         flask_session.permanent = True
         flask_session.modified = True  # 确保session被保存
 
-        logger.info(f"新家庭注册: email={email}, name={parent_name}")
+        logger.info(f"新家庭注册: email={email}, name={parent_name}, family_id={family_id}")
         return jsonify({
             'success': True,
             'family_id': family_id,
+            'parent_id': parent_id,
             'parent_name': parent_name,
+            'role': 'admin',
             'message': '注册成功'
         })
 
@@ -1057,26 +1079,42 @@ def login():
             return jsonify({'error': '请输入邮箱和密码'}), 400
 
         session = db.get_session()
-        family = session.query(Family).filter_by(email=email).first()
+        from models import Parent
 
-        if not family or family.password != hash_password(password):
+        # 在 parents 表中查找
+        parent = session.query(Parent).filter_by(email=email).first()
+
+        if not parent or parent.password != hash_password(password):
             session.close()
             return jsonify({'error': '邮箱或密码错误'}), 401
 
+        # 检查账号是否激活
+        if not parent.is_active:
+            session.close()
+            return jsonify({'error': '账号已被禁用，请联系管理员'}), 403
+
+        # 更新最后登录时间
+        from datetime import datetime
+        parent.last_login = datetime.now()
+        session.commit()
         session.close()
 
         # 设置会话（使用 Flask session）
-        flask_session['family_id'] = family.family_id
-        flask_session['parent_name'] = family.parent_name
+        flask_session['family_id'] = parent.family_id
+        flask_session['parent_id'] = parent.parent_id
+        flask_session['parent_name'] = parent.name
+        flask_session['role'] = parent.role
         flask_session.permanent = True  # 持久化 session
         flask_session.modified = True  # 确保session被保存
 
-        logger.info(f"用户登录成功: email={email}, family_id={family.family_id}")
+        logger.info(f"用户登录成功: email={email}, name={parent.name}, family_id={parent.family_id}, role={parent.role}")
 
         return jsonify({
             'success': True,
-            'family_id': family.family_id,
-            'parent_name': family.parent_name,
+            'family_id': parent.family_id,
+            'parent_id': parent.parent_id,
+            'parent_name': parent.name,
+            'role': parent.role,
             'message': '登录成功'
         })
 
@@ -1387,9 +1425,13 @@ def get_all_tasks():
 
     session = db.get_session()
     try:
-        # 使用JOIN优化性能，只查询该家庭的任务
+        from sqlalchemy.orm import joinedload
+
+        # 使用 JOIN 和 joinedload 优化性能，预加载学生信息
         tasks = session.query(Task).join(
             Student, Task.student_id == Student.student_id
+        ).options(
+            joinedload(Task.student)  # 预加载学生信息
         ).filter(
             Student.family_id == family_id
         ).order_by(
@@ -1398,8 +1440,8 @@ def get_all_tasks():
             Task.created_at.desc()
         ).all()
 
-        # 转换为字典
-        result = [task.to_dict() for task in tasks]
+        # 转换为字典，包含学生信息
+        result = [task.to_dict(include_student=True) for task in tasks]
         return jsonify(result)
 
     except Exception as e:
@@ -1751,3 +1793,245 @@ if __name__ == '__main__':
         port=port,
         debug=Config.DEBUG
     )
+# 家族成员管理 API - 添加到 app.py
+
+# 在 app.py 中添加以下 API 端点：
+
+@app.route('/api/family/members', methods=['GET'])
+def get_family_members():
+    """获取家庭成员列表"""
+    try:
+        family_id = get_current_family_id()
+        if not family_id:
+            return jsonify({'error': '请先登录'}), 401
+
+        session = db.get_session()
+        from models import Parent
+
+        # 查询家庭的所有成员
+        members = session.query(Parent).filter_by(
+            family_id=family_id,
+            is_active=True
+        ).order_by(Parent.created_at).all()
+
+        result = {
+            'members': [member.to_dict() for member in members],
+            'total': len(members)
+        }
+
+        session.close()
+        return jsonify(result)
+
+    except Exception as e:
+        logger.error(f"获取家庭成员失败: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/family/members', methods=['POST'])
+def add_family_member():
+    """添加家庭成员 - 支持拉入已有账号"""
+    try:
+        family_id = get_current_family_id()
+        if not family_id:
+            return jsonify({'error': '请先登录'}), 401
+
+        # 只有管理员可以添加成员
+        current_role = flask_session.get('role')
+        if current_role != 'admin':
+            return jsonify({'error': '只有管理员可以添加家庭成员'}), 403
+
+        data = request.json
+        email = data.get('email', '').strip().lower()
+
+        # 验证
+        if not email or '@' not in email:
+            return jsonify({'error': '请输入有效的邮箱地址'}), 400
+
+        session = db.get_session()
+        from models import Parent, Family, Student
+
+        # 检查邮箱是否已注册
+        existing_parent = session.query(Parent).filter_by(email=email).first()
+
+        if existing_parent:
+            # ========== 场景 1：用户已注册，拉入家庭 ==========
+
+            # 检查是否已在当前家庭
+            if existing_parent.family_id == family_id:
+                session.close()
+                return jsonify({
+                    'error': '该成员已在你的家庭中',
+                    'member': existing_parent.to_dict()
+                }), 400
+
+            # 检查家庭人数限制
+            member_count = session.query(Parent).filter_by(
+                family_id=family_id,
+                is_active=True
+            ).count()
+            if member_count >= 10:
+                session.close()
+                return jsonify({'error': '家庭成员数量已达上限（10人）'}), 400
+
+            # 保存旧家庭ID
+            old_family_id = existing_parent.family_id
+
+            # 将用户拉入当前家庭
+            existing_parent.family_id = family_id
+            existing_parent.role = 'member'  # 设为普通成员
+            session.commit()
+
+            # 检查旧家庭是否还有成员
+            old_family_members = session.query(Parent).filter_by(
+                family_id=old_family_id,
+                is_active=True
+            ).count()
+
+            # 检查旧家庭是否还有学生
+            old_family_students = session.query(Student).filter_by(
+                family_id=old_family_id
+            ).count()
+
+            # 如果旧家庭没有成员且没有学生，删除空家庭
+            if old_family_members == 0 and old_family_students == 0:
+                old_family = session.query(Family).get(old_family_id)
+                if old_family:
+                    session.delete(old_family)
+                    session.commit()
+                    logger.info(f"删除空家庭: {old_family_id}")
+
+            logger.info(f"拉入成员: email={email}, name={existing_parent.name}, "
+                       f"from_family={old_family_id}, to_family={family_id}")
+
+            session.close()
+            return jsonify({
+                'success': True,
+                'message': f'成功将 {existing_parent.name} 拉入家庭',
+                'member': existing_parent.to_dict()
+            })
+
+        else:
+            # ========== 场景 2：用户未注册，提示先注册 ==========
+
+            session.close()
+            return jsonify({
+                'error': '该用户尚未注册',
+                'needs_register': True,
+                'message': '请先让该用户注册账号，然后再次输入邮箱即可拉入家庭',
+                'hint': f'可以告诉 {email} 注册账号，注册完成后在这里输入邮箱即可'
+            }), 400
+
+    except Exception as e:
+        logger.error(f"添加家庭成员失败: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/family/members/<parent_id>', methods=['DELETE'])
+def remove_family_member(parent_id):
+    """移除家庭成员"""
+    try:
+        family_id = get_current_family_id()
+        if not family_id:
+            return jsonify({'error': '请先登录'}), 401
+
+        # 只有管理员可以移除成员
+        current_role = flask_session.get('role')
+        if current_role != 'admin':
+            return jsonify({'error': '只有管理员可以移除家庭成员'}), 403
+
+        session = db.get_session()
+        from models import Parent
+
+        # 查找要移除的成员
+        member = session.query(Parent).filter_by(
+            parent_id=parent_id,
+            family_id=family_id
+        ).first()
+
+        if not member:
+            session.close()
+            return jsonify({'error': '成员不存在'}), 404
+
+        # 不能移除自己
+        current_parent_id = flask_session.get('parent_id')
+        if member.parent_id == current_parent_id:
+            session.close()
+            return jsonify({'error': '不能移除自己'}), 400
+
+        # 不能移除其他管理员
+        if member.role == 'admin':
+            session.close()
+            return jsonify({'error': '不能移除管理员'}), 400
+
+        # 软删除：标记为不活跃
+        member.is_active = False
+        session.commit()
+
+        logger.info(f"移除家庭成员: parent_id={parent_id}, name={member.name}")
+
+        session.close()
+        return jsonify({
+            'success': True,
+            'message': f'已移除成员：{member.name}'
+        })
+
+    except Exception as e:
+        logger.error(f"移除家庭成员失败: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/family/members/<parent_id>/role', methods=['PUT'])
+def update_member_role(parent_id):
+    """更新成员角色（提升为管理员或降级为成员）"""
+    try:
+        family_id = get_current_family_id()
+        if not family_id:
+            return jsonify({'error': '请先登录'}), 401
+
+        # 只有管理员可以修改角色
+        current_role = flask_session.get('role')
+        if current_role != 'admin':
+            return jsonify({'error': '只有管理员可以修改成员角色'}), 403
+
+        data = request.json
+        new_role = data.get('role', 'member')
+
+        if new_role not in ['admin', 'member']:
+            return jsonify({'error': '无效的角色'}), 400
+
+        session = db.get_session()
+        from models import Parent
+
+        # 查找成员
+        member = session.query(Parent).filter_by(
+            parent_id=parent_id,
+            family_id=family_id
+        ).first()
+
+        if not member:
+            session.close()
+            return jsonify({'error': '成员不存在'}), 404
+
+        # 不能修改自己的角色
+        current_parent_id = flask_session.get('parent_id')
+        if member.parent_id == current_parent_id:
+            session.close()
+            return jsonify({'error': '不能修改自己的角色'}), 400
+
+        # 更新角色
+        old_role = member.role
+        member.role = new_role
+        session.commit()
+
+        logger.info(f"更新成员角色: parent_id={parent_id}, {old_role} -> {new_role}")
+
+        session.close()
+        return jsonify({
+            'success': True,
+            'message': f'已将 {member.name} 的角色更新为 {new_role}',
+            'member': member.to_dict()
+        })
+
+    except Exception as e:
+        logger.error(f"更新成员角色失败: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500

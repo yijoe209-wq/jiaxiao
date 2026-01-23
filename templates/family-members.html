@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭成员管理 - 家校任务助手</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans SC"', '"Inter"', 'sans-serif'],
+                    },
+                    colors: {
+                        zen: {
+                            bg: '#ffffff',
+                            text: '#1a1a1a',
+                            textLight: '#999999',
+                            border: '#f0f0f0',
+                            accent: '#1a1a1a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fafafa;
+            color: #1a1a1a;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .btn-primary {
+            background: #1a1a1a;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: #333;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1a1a1a;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid #e5e5e5;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: #1a1a1a;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: #fafafa;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .member-item:hover {
+            background: #f5f5f5;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .role-admin {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .role-member {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1a1a1a;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- 顶部导航 -->
+    <nav class="bg-white border-b border-gray-200">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <a href="/my-tasks" class="text-gray-600 hover:text-gray-900">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </a>
+                <h1 class="text-xl font-semibold">👨‍👩‍👧‍👦 家庭成员管理</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="currentUser" class="text-sm text-gray-600"></span>
+                <button onclick="logout()" class="text-sm text-gray-600 hover:text-gray-900">退出</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <!-- 当前家庭信息 -->
+        <div class="card mb-8">
+            <h2 class="text-lg font-semibold mb-2">当前家庭</h2>
+            <p class="text-gray-600 text-sm">所有家庭成员都可以查看和管理孩子的任务</p>
+        </div>
+
+        <!-- 家庭成员列表 -->
+        <div class="card mb-8">
+            <h2 class="text-lg font-semibold mb-4">家庭成员</h2>
+
+            <div id="membersList" class="loading">
+                <div class="spinner"></div>
+            </div>
+
+            <div id="emptyState" class="hidden text-center py-12 text-gray-500">
+                <p>暂无家庭成员</p>
+            </div>
+        </div>
+
+        <!-- 添加成员表单 -->
+        <div class="card">
+            <h2 class="text-lg font-semibold mb-4">添加家庭成员</h2>
+
+            <div id="addMemberForm">
+                <p class="text-sm text-gray-600 mb-4">
+                    请输入成员的邮箱地址：
+                </p>
+
+                <form onsubmit="addMember(event)">
+                    <div class="mb-4">
+                        <input
+                            type="email"
+                            id="memberEmail"
+                            placeholder="成员邮箱（如：mom@example.com）"
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200"
+                        >
+                    </div>
+
+                    <button type="submit" class="btn-primary w-full">
+                        拉入家庭
+                    </button>
+                </form>
+
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <p class="text-sm text-blue-800 font-medium mb-2">
+                        💡 使用说明
+                    </p>
+                    <ul class="text-sm text-blue-700 list-disc list-inside space-y-1">
+                        <li>如果成员已注册，将直接拉入家庭</li>
+                        <li>如果成员未注册，请先让成员注册账号</li>
+                        <li>拉入后，成员可以看到家庭中所有的孩子和任务</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 提示信息 -->
+        <div class="mt-8 p-4 bg-yellow-50 rounded-lg">
+            <p class="text-sm text-yellow-800">
+                ⚠️ <strong>注意：</strong>只有管理员可以添加和移除家庭成员
+            </p>
+        </div>
+    </main>
+
+    <script>
+        // 当前用户信息
+        let currentUser = null;
+        let currentRole = null;
+
+        // 页面加载时执行
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            if (currentUser) {
+                await loadMembers();
+            }
+        });
+
+        // 检查登录状态
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/check');
+                if (!response.ok) {
+                    window.location.href = '/login';
+                    return false;
+                }
+
+                const data = await response.json();
+                currentUser = data;
+                currentRole = data.role || 'member';
+
+                document.getElementById('currentUser').textContent = data.parent_name || '用户';
+                return true;
+            } catch (error) {
+                console.error('检查登录状态失败:', error);
+                window.location.href = '/login';
+                return false;
+            }
+        }
+
+        // 加载家庭成员列表
+        async function loadMembers() {
+            try {
+                const response = await fetch('/api/family/members');
+                if (!response.ok) {
+                    throw new Error('加载失败');
+                }
+
+                const data = await response.json();
+                const members = data.members || [];
+
+                const container = document.getElementById('membersList');
+                const emptyState = document.getElementById('emptyState');
+
+                if (members.length === 0) {
+                    container.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                container.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+
+                container.innerHTML = members.map(member => {
+                    const isAdmin = member.role === 'admin';
+                    const isCurrentUser = currentUser && member.parent_id === currentUser.parent_id;
+
+                    return `
+                        <div class="member-item">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                        <span class="text-gray-600 font-medium">
+                                            ${member.name ? member.name.charAt(0).toUpperCase() : '?'}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium">${member.name || '未知'}</div>
+                                        <div class="text-sm text-gray-500">${member.email}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="role-badge ${isAdmin ? 'role-admin' : 'role-member'}">
+                                    ${isAdmin ? '管理员' : '成员'}
+                                </span>
+                                ${currentRole === 'admin' && !isAdmin && !isCurrentUser ? `
+                                    <button
+                                        onclick="removeMember('${member.parent_id}', '${member.name}')"
+                                        class="btn-danger text-xs"
+                                    >
+                                        移除
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('加载家庭成员失败:', error);
+                const container = document.getElementById('membersList');
+                container.innerHTML = `
+                    <div class="text-center py-12 text-red-600">
+                        <p>加载失败，请刷新重试</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 添加成员（拉入家庭）
+        async function addMember(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('memberEmail').value.trim();
+            const submitButton = event.target.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+
+            try {
+                submitButton.disabled = true;
+                submitButton.textContent = '处理中...';
+
+                const response = await fetch('/api/family/members', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email})
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    document.getElementById('memberEmail').value = '';
+                    await loadMembers();
+                } else if (data.needs_register) {
+                    alert('ℹ️ ' + data.message + '\n\n' + (data.hint || ''));
+                } else {
+                    alert('❌ ' + data.error);
+                }
+
+            } catch (error) {
+                console.error('添加成员失败:', error);
+                alert('❌ 网络错误，请重试');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            }
+        }
+
+        // 移除成员
+        async function removeMember(parentId, memberName) {
+            if (!confirm(`确定要移除 ${memberName} 吗？\n\n移除后，该成员将无法查看家庭中的孩子和任务。`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/family/members/${parentId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    await loadMembers();
+                } else {
+                    alert('❌ ' + data.error);
+                }
+
+            } catch (error) {
+                console.error('移除成员失败:', error);
+                alert('❌ 网络错误，请重试');
+            }
+        }
+
+        // 退出登录
+        async function logout() {
+            if (!confirm('确定要退出登录吗？')) {
+                return;
+            }
+
+            try {
+                await fetch('/api/logout', {method: 'POST'});
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('退出失败:', error);
+                window.location.href = '/login';
+            }
+        }
+    </script>
+</body>
+</html>

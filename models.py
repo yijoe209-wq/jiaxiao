@@ -24,16 +24,49 @@ class Family(Base):
     __tablename__ = 'families'
 
     family_id = Column(String(50), primary_key=True, default=generate_id)
-    email = Column(String(100), unique=True, nullable=False, index=True)  # 家长邮箱
-    password = Column(String(100), nullable=False)  # 密码（加密存储）
-    parent_name = Column(String(50))  # 家长姓名
+    family_name = Column(String(100))  # 家庭名称（可选）
     created_at = Column(DateTime, default=datetime.now)
 
-    # 关系：一个家庭有多个学生
+    # 关系：一个家庭有多个家长和学生
+    parents = relationship("Parent", back_populates="family", cascade="all, delete-orphan")
     students = relationship("Student", back_populates="family", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<Family(family_id={self.family_id}, parent_name={self.parent_name})>"
+        return f"<Family(family_id={self.family_id}, family_name={self.family_name})>"
+
+
+class Parent(Base):
+    """家长表 - 一个家庭可以有多个家长"""
+    __tablename__ = 'parents'
+
+    parent_id = Column(String(50), primary_key=True, default=generate_id)
+    family_id = Column(String(50), ForeignKey('families.family_id'), nullable=False, index=True)
+    email = Column(String(100), unique=True, nullable=False, index=True)  # 家长邮箱
+    password = Column(String(100), nullable=False)  # 密码（加密存储）
+    name = Column(String(50))  # 家长姓名
+    role = Column(String(20), default='member')  # admin（创建者）或 member（成员）
+    is_active = Column(Boolean, default=True)  # 账号是否激活
+    created_at = Column(DateTime, default=datetime.now)
+    last_login = Column(DateTime)  # 最后登录时间
+
+    # 关系：一个家长属于一个家庭
+    family = relationship("Family", back_populates="parents")
+
+    def __repr__(self):
+        return f"<Parent(parent_id={self.parent_id}, name={self.name}, email={self.email})>"
+
+    def to_dict(self):
+        """转换为字典"""
+        return {
+            'parent_id': self.parent_id,
+            'family_id': self.family_id,
+            'email': self.email,
+            'name': self.name,
+            'role': self.role,
+            'is_active': self.is_active,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'last_login': self.last_login.isoformat() if self.last_login else None
+        }
 
 
 class Student(Base):
@@ -113,8 +146,12 @@ class Task(Base):
     def __repr__(self):
         return f"<Task(task_id={self.task_id}, subject={self.subject}, description={self.description[:20]}...)>"
 
-    def to_dict(self):
-        """转换为字典"""
+    def to_dict(self, include_student=False):
+        """转换为字典
+
+        Args:
+            include_student: 是否包含学生信息
+        """
         # 安全解析 attachments JSON
         attachments = []
         if self.attachments and self.attachments.strip():
@@ -129,7 +166,7 @@ class Task(Base):
             # 使用 isoformat 并添加时区信息（虽然不转换时区，但让格式明确）
             deadline_str = self.deadline.isoformat()
 
-        return {
+        result = {
             'task_id': self.task_id,
             'student_id': self.student_id,
             'intent': self.intent,
@@ -148,6 +185,16 @@ class Task(Base):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
+
+        # 如果需要包含学生信息
+        if include_student and hasattr(self, 'student') and self.student:
+            result['student'] = {
+                'student_id': self.student.student_id,
+                'name': self.student.name,
+                'grade': self.student.grade
+            }
+
+        return result
 
 
 class PendingTask(Base):
@@ -269,12 +316,16 @@ if database_url:
     print(f"📊 使用 PostgreSQL: {database_url}")
 else:
     # 降级到 SQLite (本地开发)
-    if os.getenv('ENV') == 'development' or os.getenv('ENVIRONMENT') == 'development':
+    if os.getenv('ENV') == 'development' or os.getenv('ENVIRONMENT') == 'development' or not os.getenv('DATABASE_URL'):
         db_path = os.path.abspath('jiaxiao.db')
     else:
         # Zeabur: 使用 /app/data 目录持久化存储
         data_dir = '/app/data'
-        os.makedirs(data_dir, exist_ok=True)
+        try:
+            os.makedirs(data_dir, exist_ok=True)
+        except OSError:
+            # 如果无法创建 /app/data，使用当前目录
+            data_dir = os.getcwd()
         db_path = os.path.join(data_dir, 'jiaxiao.db')
 
     database_url = f'sqlite:///{db_path}'

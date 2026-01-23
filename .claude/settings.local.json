@@ -18,7 +18,8 @@
       "Bash(JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home ./android/gradlew:*)",
       "Bash(JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home npx cap add:*)",
       "Bash(chmod:*)",
-      "Bash(JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home ./fix-android-studio.sh:*)"
+      "Bash(JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home ./fix-android-studio.sh:*)",
+      "Bash(git add:*)"
     ]
   }
 }
