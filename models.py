@@ -186,13 +186,23 @@ class Task(Base):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
 
-        # 如果需要包含学生信息
-        if include_student and hasattr(self, 'student') and self.student:
-            result['student'] = {
-                'student_id': self.student.student_id,
-                'name': self.student.name,
-                'grade': self.student.grade
-            }
+        # 如果需要包含学生信息（安全访问）
+        if include_student:
+            try:
+                # 使用 inspect 安全检查属性
+                from sqlalchemy import inspect
+                if hasattr(self, 'student'):
+                    # 检查 student 是否已加载
+                    student_state = inspect(self.student).transient
+                    if not student_state:
+                        result['student'] = {
+                            'student_id': self.student.student_id,
+                            'name': self.student.name,
+                            'grade': self.student.grade
+                        }
+            except Exception:
+                # 如果访问失败，忽略学生信息
+                pass
 
         return result
 
