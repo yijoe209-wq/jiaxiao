@@ -1097,24 +1097,32 @@ def login():
         from datetime import datetime
         parent.last_login = datetime.now()
         session.commit()
+
+        # 在关闭session前提取所有需要的数据
+        family_id = parent.family_id
+        parent_id = parent.parent_id
+        parent_name = parent.name
+        role = parent.role
+        email_addr = parent.email
+
         session.close()
 
         # 设置会话（使用 Flask session）
-        flask_session['family_id'] = parent.family_id
-        flask_session['parent_id'] = parent.parent_id
-        flask_session['parent_name'] = parent.name
-        flask_session['role'] = parent.role
+        flask_session['family_id'] = family_id
+        flask_session['parent_id'] = parent_id
+        flask_session['parent_name'] = parent_name
+        flask_session['role'] = role
         flask_session.permanent = True  # 持久化 session
         flask_session.modified = True  # 确保session被保存
 
-        logger.info(f"用户登录成功: email={email}, name={parent.name}, family_id={parent.family_id}, role={parent.role}")
+        logger.info(f"用户登录成功: email={email_addr}, name={parent_name}, family_id={family_id}, role={role}")
 
         return jsonify({
             'success': True,
-            'family_id': parent.family_id,
-            'parent_id': parent.parent_id,
-            'parent_name': parent.name,
-            'role': parent.role,
+            'family_id': family_id,
+            'parent_id': parent_id,
+            'parent_name': parent_name,
+            'role': role,
             'message': '登录成功'
         })
 
@@ -1128,23 +1136,30 @@ def get_current_user():
     """获取当前登录用户信息"""
     try:
         family_id = get_current_family_id()
+        parent_id = flask_session.get('parent_id')
 
-        if not family_id:
+        if not family_id or not parent_id:
             return jsonify({'error': '未登录'}), 401
 
         session = db.get_session()
-        family = session.query(Family).filter_by(family_id=family_id).first()
+        from models import Parent
+        parent = session.query(Parent).filter_by(
+            family_id=family_id,
+            parent_id=parent_id
+        ).first()
 
-        if not family:
+        if not parent:
             session.close()
             return jsonify({'error': '用户不存在'}), 404
 
-
-        # 返回嵌套的 user 对象，与前端期望一致
+        # 在关闭session前提取数据
         result = {
             'user': {
-                'parent_name': family.parent_name,
-                'email': family.email
+                'parent_name': parent.name,
+                'email': parent.email,
+                'role': parent.role,
+                'parent_id': parent.parent_id,
+                'family_id': parent.family_id
             }
         }
 
@@ -1162,26 +1177,33 @@ def get_current_user():
 def check_auth():
     """检查用户登录状态"""
     try:
-        # 从 session 中获取 family_id
+        # 从 session 中获取 family_id 和 parent_id
         family_id = flask_session.get('family_id')
+        parent_id = flask_session.get('parent_id')
 
-        if not family_id:
+        if not family_id or not parent_id:
             return jsonify({'loggedIn': False})
 
-        # 验证 family_id 是否有效
+        # 验证 parent_id 是否有效
         session = db.get_session()
-        family = session.query(Family).filter_by(family_id=family_id).first()
+        from models import Parent
+        parent = session.query(Parent).filter_by(
+            family_id=family_id,
+            parent_id=parent_id
+        ).first()
         session.close()
 
-        if not family:
+        if not parent:
             return jsonify({'loggedIn': False})
 
         return jsonify({
             'loggedIn': True,
             'user': {
-                'family_id': family.family_id,
-                'email': family.email,
-                'parent_name': family.parent_name
+                'family_id': parent.family_id,
+                'parent_id': parent.parent_id,
+                'email': parent.email,
+                'parent_name': parent.name,
+                'role': parent.role
             }
         })
 
@@ -1778,21 +1800,6 @@ def get_student_tasks(student_id):
 
 # ========== 启动入口 ==========
 
-if __name__ == '__main__':
-    import os
-
-    logger.info("🚀 启动家校任务管理助手")
-    logger.info(f"📊 数据库: {Config.DATABASE_URL}")
-    logger.info(f"🤖 LLM 模型: {Config.LLM_MODEL}")
-
-    # 从环境变量读取端口，默认 5000
-    port = int(os.getenv('PORT', 5001))
-
-    app.run(
-        host='0.0.0.0',
-        port=port,
-        debug=Config.DEBUG
-    )
 # 家族成员管理 API - 添加到 app.py
 
 # 在 app.py 中添加以下 API 端点：
@@ -2035,3 +2042,19 @@ def update_member_role(parent_id):
     except Exception as e:
         logger.error(f"更新成员角色失败: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
+
+if __name__ == '__main__':
+    import os
+
+    logger.info("🚀 启动家校任务管理助手")
+    logger.info(f"📊 数据库: {Config.DATABASE_URL}")
+    logger.info(f"🤖 LLM 模型: {Config.LLM_MODEL}")
+
+    # 从环境变量读取端口，默认 5000
+    port = int(os.getenv('PORT', 5001))
+
+    app.run(
+        host='0.0.0.0',
+        port=port,
+        debug=Config.DEBUG
+    )

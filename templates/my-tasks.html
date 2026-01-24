@@ -452,7 +452,7 @@
         // 检查登录状态
         async function checkAuth() {
             try {
-                const response = await fetch('/api/auth/check');
+                const response = await fetch('/api/auth/check', { credentials: 'same-origin' });
                 if (!response.ok) {
                     window.location.href = '/login';
                     return false;
@@ -469,7 +469,7 @@
         // 加载学生列表
         async function loadStudents() {
             try {
-                const response = await fetch('/api/students');
+                const response = await fetch('/api/students', { credentials: 'same-origin' });
                 if (!response.ok) throw new Error('加载失败');
                 const data = await response.json();
                 const students = data.students || [];  // 修复：API 返回 {students: [...]}
@@ -493,7 +493,7 @@
         async function loadTasks() {
             try {
                 console.log('📊 开始加载任务...');
-                const response = await fetch('/api/tasks');
+                const response = await fetch('/api/tasks', { credentials: 'same-origin' });
                 console.log('📊 响应状态:', response.status);
 
                 if (!response.ok) {
@@ -750,7 +750,8 @@
         async function toggleTask(taskId) {
             try {
                 const response = await fetch(`/api/tasks/${taskId}/complete`, {
-                    method: 'POST'
+                    method: 'POST',
+                    credentials: 'same-origin'
                 });
                 if (!response.ok) throw new Error('操作失败');
                 await loadTasks();
@@ -771,7 +772,8 @@
 
             try {
                 const response = await fetch(`/api/tasks/${taskId}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    credentials: 'same-origin'
                 });
                 if (!response.ok) throw new Error('删除失败');
                 await loadTasks();
@@ -809,7 +811,7 @@
         // 加载当前用户信息
         async function loadUserInfo() {
             try {
-                const response = await fetch('/api/me');
+                const response = await fetch('/api/me', { credentials: 'same-origin' });
                 if (!response.ok) {
                     console.error('加载用户信息失败，状态码:', response.status);
                     return;

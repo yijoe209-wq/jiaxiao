@@ -24,7 +24,6 @@ class Family(Base):
     __tablename__ = 'families'
 
     family_id = Column(String(50), primary_key=True, default=generate_id)
-    family_name = Column(String(100))  # 家庭名称（可选）
     created_at = Column(DateTime, default=datetime.now)
 
     # 关系：一个家庭有多个家长和学生
@@ -32,7 +31,7 @@ class Family(Base):
     students = relationship("Student", back_populates="family", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<Family(family_id={self.family_id}, family_name={self.family_name})>"
+        return f"<Family(family_id={self.family_id})>"
 
 
 class Parent(Base):

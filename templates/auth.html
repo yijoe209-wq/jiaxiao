@@ -377,6 +377,7 @@
                 const response = await fetch(API_BASE + '/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
                     body: JSON.stringify({ email, password })
                 });
 
@@ -409,23 +410,27 @@
             const password = document.getElementById('registerPassword').value;
 
             try {
+                console.log('📤 开始注册请求...');
                 const response = await fetch(API_BASE + '/api/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
                     body: JSON.stringify({ parent_name, email, password })
                 });
 
+                console.log('📥 收到响应，状态码:', response.status);
                 const result = await response.json();
+                console.log('📦 响应数据:', result);
 
                 if (result.success) {
-                    alert('注册成功！即将跳转...');
-                    // 跳转到任务中心（后端已设置session cookie）
+                    console.log('✅ 注册成功，准备跳转到任务中心');
                     window.location.href = '/my-tasks';
                 } else {
+                    console.error('❌ 注册失败:', result.error);
                     showError(result.error || '注册失败');
                 }
             } catch (error) {
-                console.error('注册失败:', error);
+                console.error('💥 注册异常:', error);
                 showError('注册失败，请稍后重试');
             }
         }

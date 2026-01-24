@@ -19,7 +19,8 @@
       "Bash(JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home npx cap add:*)",
       "Bash(chmod:*)",
       "Bash(JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home ./fix-android-studio.sh:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(playwright install:*)"
     ]
   }
 }
